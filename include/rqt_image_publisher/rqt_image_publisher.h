@@ -1,5 +1,5 @@
-#ifndef ROI_VIEWPOINT_PLANNER_RQT_PLUGIN_H
-#define ROI_VIEWPOINT_PLANNER_RQT_PLUGIN_H
+#ifndef RQT_IMAGE_PUBLISHER_H
+#define RQT_IMAGE_PUBLISHER_H
 
 #include <QWidget>
 #include <ros/ros.h>
@@ -66,4 +66,4 @@ private:
 
 }
 
-#endif // ROI_VIEWPOINT_PLANNER_RQT_PLUGIN_H
+#endif // RQT_IMAGE_PUBLISHER_H
