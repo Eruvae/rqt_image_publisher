@@ -1,0 +1,20 @@
+<library path="lib/librqt_image_publisher">
+  <class name="rqt_image_publisher/RqtImagePublisher" type="rqt_image_publisher::RqtImagePublisher" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      A plugin to publish images from a folder.
+    </description>
+    <qtgui>
+      <group>
+        <label>Topics</label>
+      </group>
+      <!-- optional grouping...
+      <group>
+        <label>Subgroup</label>
+      </group>
+      -->
+      <label>Image Publisher</label>
+      <icon type="theme">system-help</icon>
+      <statustip>A plugin to publish images from a folder.</statustip>
+    </qtgui>
+  </class>
+</library>
