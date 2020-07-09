@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>708</width>
-    <height>479</height>
+    <width>617</width>
+    <height>502</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -111,19 +111,6 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="0">
-    <widget class="QPushButton" name="selectFolderButton">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="text">
-      <string>Select Folder</string>
-     </property>
-    </widget>
-   </item>
    <item row="0" column="0" colspan="2">
     <widget class="QTreeView" name="fileTreeView">
      <property name="sizePolicy">
@@ -188,24 +175,21 @@
       <item row="2" column="1">
        <layout class="QHBoxLayout" name="settingsPublishingLayout">
         <item>
-         <widget class="QRadioButton" name="publishOnceRadioButton">
+         <widget class="QCheckBox" name="publishOnLoadCheckBox">
           <property name="text">
-           <string>Once</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
+           <string>Publish on load</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="publishLatchedRadioButton">
+         <widget class="QCheckBox" name="publishLatchedCheckBox">
           <property name="text">
            <string>Latched</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QRadioButton" name="publishContinouslyRadioButton">
+         <widget class="QCheckBox" name="publishContinouslyCheckBox">
           <property name="text">
            <string>Continously</string>
           </property>
@@ -262,7 +246,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QDoubleSpinBox" name="diashowFrequencySpinBox">
+         <widget class="QDoubleSpinBox" name="rotationFrequencySpinBox">
           <property name="enabled">
            <bool>false</bool>
           </property>
@@ -306,10 +290,16 @@
      </layout>
     </widget>
    </item>
-   <item row="1" column="1">
-    <widget class="QCheckBox" name="publishOnLoadCheckBox">
+   <item row="1" column="0" colspan="2">
+    <widget class="QPushButton" name="selectFolderButton">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="text">
-      <string>Publish on load</string>
+      <string>Select Folder</string>
      </property>
     </widget>
    </item>

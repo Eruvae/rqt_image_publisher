@@ -6,6 +6,8 @@
     <qtgui>
       <group>
         <label>Topics</label>
+        <icon type="theme">folder</icon>
+        <statustip>Plugins related to ROS topics.</statustip>
       </group>
       <!-- optional grouping...
       <group>
@@ -13,7 +15,7 @@
       </group>
       -->
       <label>Image Publisher</label>
-      <icon type="theme">system-help</icon>
+      <icon type="theme">image-x-generic</icon>
       <statustip>A plugin to publish images from a folder.</statustip>
     </qtgui>
   </class>

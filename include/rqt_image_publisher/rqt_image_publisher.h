@@ -15,6 +15,7 @@ struct PluginSettings
 {
   QString imageTopic;
   QString frameId;
+  bool publishOnLoad;
   bool publishLatched;
   bool publishContinously;
   double publishingFrequency;
@@ -49,6 +50,8 @@ public:
   virtual void shutdownPlugin();
   virtual void saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const;
   virtual void restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings);
+  virtual bool hasConfiguration() const;
+  virtual void triggerConfiguration();
 
 private slots:
   void on_selectFolderButton_clicked();
@@ -59,14 +62,16 @@ private slots:
   void on_openSettingsButton_clicked();
   void on_settingsCancelButton_clicked();
   void on_settingsApplyButton_clicked();
-  void on_publishSettingsRadioButton_clicked();
-  void on_publishContinouslyRadioButton_toggled(bool checked);
+  void on_publishContinouslyCheckBox_toggled(bool checked);
   void on_rotateImagesCheckBox_toggled(bool checked);
 
 signals:
 
 private:
   bool loadImage(const QModelIndex &index);
+  void pluginSettingsToUi();
+  void uiToPluginSettings();
+  void applySettings();
 
   Ui::RqtImagePublisher ui;
   RqtImagePublisherWidget* widget;
@@ -79,6 +84,7 @@ private:
   QImage image_qimg;
   QPixmap image_qpix;
   sensor_msgs::Image image_ros;
+  PluginSettings settings;
 };
 
 }

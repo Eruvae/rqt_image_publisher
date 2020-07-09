@@ -1,4 +1,4 @@
-#include "rqt_image_publisher/rqt_image_publisher.h"
+﻿#include "rqt_image_publisher/rqt_image_publisher.h"
 
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
@@ -48,8 +48,6 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
 
   imt = new image_transport::ImageTransport(getNodeHandle());
 
-  image_pub = imt->advertise("/camera/color/image_raw", 1);
-
   connect(ui.selectFolderButton, SIGNAL(clicked()), this, SLOT(on_selectFolderButton_clicked()));
   connect(ui.fileTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_fileTreeView_doubleClicked(QModelIndex)));
   connect(ui.previousImageButton, SIGNAL(clicked()), this, SLOT(on_previousImageButton_clicked()));
@@ -58,36 +56,55 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.openSettingsButton, SIGNAL(clicked()), this, SLOT(on_openSettingsButton_clicked()));
   connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
   connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
-  connect(ui.publishContinouslyRadioButton, SIGNAL(toggled(bool)), this, SLOT(on_publishContinouslyRadioButton_toggled(bool)));
+  connect(ui.publishContinouslyCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_publishContinouslyCheckBox_toggled(bool)));
   connect(ui.rotateImagesCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_rotateImagesCheckBox_toggled(bool)));
 }
 
 void RqtImagePublisher::shutdownPlugin()
 {
   // unregister all publishers here
+  image_pub.shutdown();
+  delete imt;
 }
 
 void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const
 {
-  // TODO save intrinsic configuration, usually using:
-  // instance_settings.setValue(k, v)
+  instance_settings.setValue("imageTopic", settings.imageTopic);
+  instance_settings.setValue("frameId", settings.frameId);
+  instance_settings.setValue("publishOnLoad", settings.publishOnLoad);
+  instance_settings.setValue("publishLatched", settings.publishLatched);
+  instance_settings.setValue("publishContinously", settings.publishContinously);
+  instance_settings.setValue("publishingFrequency", settings.publishingFrequency);
+  instance_settings.setValue("rotateImages", settings.rotateImages);
+  instance_settings.setValue("rotateBackwards", settings.rotateBackwards);
+  instance_settings.setValue("rotationFrequency", settings.rotationFrequency);
 }
 
 void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings)
 {
-  // TODO restore intrinsic configuration, usually using:
-  // v = instance_settings.value(k)
+  settings.imageTopic = instance_settings.value("imageTopic", "/image").toString();
+  settings.frameId = instance_settings.value("frameId", "").toString();
+  settings.publishOnLoad = instance_settings.value("publishOnLoad", false).toBool();
+  settings.publishLatched = instance_settings.value("publishLatched", false).toBool();
+  settings.publishContinously = instance_settings.value("publishContinously", false).toBool();
+  settings.publishingFrequency = instance_settings.value("publishingFrequency", 1.0).toDouble();
+  settings.rotateImages = instance_settings.value("rotateImages", false).toBool();
+  settings.rotateBackwards = instance_settings.value("rotateBackwards", false).toBool();
+  settings.rotationFrequency = instance_settings.value("rotationFrequency", 1.0).toDouble();
+
+  pluginSettingsToUi();
+  applySettings();
 }
 
-/*bool hasConfiguration() const
+bool RqtImagePublisher::hasConfiguration() const
 {
   return true;
 }
 
-void triggerConfiguration()
+void RqtImagePublisher::triggerConfiguration()
 {
-  // Usually used to open a dialog to offer the user a set of configuration
-}*/
+  ui.settingsWidget->setHidden(!ui.settingsWidget->isHidden());
+}
 
 void RqtImagePublisher::on_selectFolderButton_clicked()
 {
@@ -166,33 +183,36 @@ void RqtImagePublisher::on_publishButton_clicked()
 
 void RqtImagePublisher::on_openSettingsButton_clicked()
 {
-  ui.settingsWidget->show();
+  ui.settingsWidget->setHidden(!ui.settingsWidget->isHidden());
 }
 
 void RqtImagePublisher::on_settingsCancelButton_clicked()
 {
+  pluginSettingsToUi();
   ui.settingsWidget->hide();
 }
 
 void RqtImagePublisher::on_settingsApplyButton_clicked()
 {
+  uiToPluginSettings();
   ui.settingsWidget->hide();
+  applySettings();
 }
 
-void RqtImagePublisher::on_publishContinouslyRadioButton_toggled(bool checked)
+void RqtImagePublisher::on_publishContinouslyCheckBox_toggled(bool checked)
 {
-  ui.publishingFrequencySpinBox->setEnabled(checked);
+  ui.publishLatchedCheckBox->setEnabled(!checked && !ui.rotateImagesCheckBox->isChecked());
+  ui.publishingFrequencySpinBox->setEnabled(checked && !ui.rotateImagesCheckBox->isChecked());
 }
 
 void RqtImagePublisher::on_rotateImagesCheckBox_toggled(bool checked)
 {
-  ui.publishOnceRadioButton->setEnabled(!checked);
-  ui.publishLatchedRadioButton->setEnabled(!checked);
-  ui.publishContinouslyRadioButton->setEnabled(!checked);
-  ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinouslyRadioButton->isChecked());
+  ui.publishLatchedCheckBox->setEnabled(!checked && !ui.publishContinouslyCheckBox->isChecked());
+  ui.publishContinouslyCheckBox->setEnabled(!checked);
+  ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinouslyCheckBox->isChecked());
 
   ui.rotateBackwardsCheckBox->setEnabled(checked);
-  ui.diashowFrequencySpinBox->setEnabled(checked);
+  ui.rotationFrequencySpinBox->setEnabled(checked);
 }
 
 
@@ -223,8 +243,9 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   image_ros.data.resize(qt_image_rgb8.byteCount());
   memcpy(image_ros.data.data(), qt_image_rgb8.bits(), qt_image_rgb8.byteCount());
   image_ros.header.stamp = ros::Time::now();
+  image_ros.header.frame_id = settings.frameId.toStdString();
 
-  if (ui.publishOnLoadCheckBox->isChecked())
+  if (settings.publishOnLoad)
     image_pub.publish(image_ros);
 
   selected_image = index;
@@ -238,6 +259,40 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   ui.publishButton->setEnabled(true);
 
   return true;
+}
+
+void RqtImagePublisher::pluginSettingsToUi()
+{
+  ui.imageTopicTextEdit->setText(settings.imageTopic);
+  ui.frameIdTextEdit->setText(settings.frameId);
+  ui.publishOnLoadCheckBox->setChecked(settings.publishOnLoad);
+  ui.publishLatchedCheckBox->setChecked(settings.publishLatched);
+  ui.publishContinouslyCheckBox->setChecked(settings.publishContinously);
+  ui.publishingFrequencySpinBox->setValue(settings.publishingFrequency);
+  ui.rotateImagesCheckBox->setChecked(settings.rotateImages);
+  ui.rotateBackwardsCheckBox->setChecked(settings.rotateBackwards);
+  ui.rotationFrequencySpinBox->setValue(settings.rotationFrequency);
+}
+
+void RqtImagePublisher::uiToPluginSettings()
+{
+  settings.imageTopic = ui.imageTopicTextEdit->text();
+  settings.frameId = ui.frameIdTextEdit->text();
+  settings.publishOnLoad = ui.publishOnLoadCheckBox->isChecked();
+  settings.publishLatched = ui.publishLatchedCheckBox->isChecked();
+  settings.publishContinously = ui.publishContinouslyCheckBox->isChecked();
+  settings.publishingFrequency = ui.publishingFrequencySpinBox->value();
+  settings.rotateImages = ui.rotateImagesCheckBox->isChecked();
+  settings.rotateBackwards = ui.rotateBackwardsCheckBox->isChecked();
+  settings.rotationFrequency = ui.rotationFrequencySpinBox->value();
+}
+
+void RqtImagePublisher::applySettings()
+{
+  image_pub.shutdown();
+  bool latched = settings.publishLatched && !settings.publishContinously && !settings.rotateImages;
+  image_pub = imt->advertise(settings.imageTopic.toStdString(), 1, latched);
+  image_ros.header.frame_id = settings.frameId.toStdString();
 }
 
 } // namespace rqt_image_publisher
