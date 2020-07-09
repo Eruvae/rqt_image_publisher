@@ -8,6 +8,7 @@
 #include <QPixmap>
 #include <QModelIndex>
 #include <QString>
+#include <QStringList>
 
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
@@ -74,11 +75,15 @@ private slots:
   void on_previousImageButton_clicked();
   void on_publishButton_clicked();
   void on_openSettingsButton_clicked();
+  void on_filterListButton_clicked();
   void on_settingsCancelButton_clicked();
   void on_settingsApplyButton_clicked();
+  void on_filterListCancelButton_clicked();
+  void on_filterListApplyButton_clicked();
   void on_publishContinuouslyCheckBox_toggled(bool checked);
   void on_rotateImagesCheckBox_toggled(bool checked);
   void on_publishingTimer_timeout();
+
 
 private:
   bool loadImage(const QModelIndex &index);
@@ -87,6 +92,8 @@ private:
   void startPublishing();
   void stopPublishing();
   bool generateRosImage();
+  void setSelectedImage(QModelIndex index);
+  void clearSelectedImage();
   void pluginSettingsToUi();
   void uiToPluginSettings();
   void applySettings();
@@ -98,6 +105,7 @@ private:
   QTimer publishingTimer;
 
   QFileSystemModel *folder_model;
+  QStringList filterList;
 
   QModelIndex selected_image;
   QImage image_qimg;

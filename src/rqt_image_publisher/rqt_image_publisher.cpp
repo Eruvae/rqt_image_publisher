@@ -1,7 +1,6 @@
 ﻿#include "rqt_image_publisher/rqt_image_publisher.h"
 
 #include <pluginlib/class_list_macros.h>
-#include <QStringList>
 #include <QFileDialog>
 #include <sensor_msgs/image_encodings.h>
 
@@ -35,12 +34,13 @@ RqtImagePublisher::RqtImagePublisher() :
 void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
 {
   // access standalone command line arguments
-  QStringList argv = context.argv();
+  // QStringList argv = context.argv();
   // create QWidget
   widget = new RqtImagePublisherWidget(this);
   // extend the widget with all attributes and children from UI file
   ui.setupUi(widget);
   ui.settingsWidget->hide();
+  ui.filterListWidget->hide();
   // add widget to the user interface
   context.addWidget(widget);
 
@@ -52,8 +52,11 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.nextImageButton, SIGNAL(clicked()), this, SLOT(on_nextImageButton_clicked()));
   connect(ui.publishButton, SIGNAL(clicked()), this, SLOT(on_publishButton_clicked()));
   connect(ui.openSettingsButton, SIGNAL(clicked()), this, SLOT(on_openSettingsButton_clicked()));
+  connect(ui.filterListButton, SIGNAL(clicked()), this, SLOT(on_filterListButton_clicked()));
   connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
   connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
+  connect(ui.filterListApplyButton, SIGNAL(clicked()), this, SLOT(on_filterListApplyButton_clicked()));
+  connect(ui.filterListCancelButton, SIGNAL(clicked()), this, SLOT(on_filterListCancelButton_clicked()));
   connect(ui.publishContinuouslyCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_publishContinuouslyCheckBox_toggled(bool)));
   connect(ui.rotateImagesCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_rotateImagesCheckBox_toggled(bool)));
   connect(&publishingTimer, SIGNAL(timeout()), this, SLOT(on_publishingTimer_timeout()));
@@ -64,6 +67,8 @@ void RqtImagePublisher::shutdownPlugin()
   // unregister all publishers here
   image_pub.shutdown();
   delete imt;
+  if (folder_model)
+    delete folder_model;
 }
 
 void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_gui_cpp::Settings& instance_settings) const
@@ -123,16 +128,12 @@ void RqtImagePublisher::on_selectFolderButton_clicked()
   if (dir_path.isEmpty())
     return;
 
-  ui.imageView->clear();
-  image_qimg = QImage();
-  image_qpix = QPixmap();
-  ui.previousImageButton->setEnabled(false);
-  ui.nextImageButton->setEnabled(false);
-  ui.publishButton->setEnabled(false);
-  ui.curImageLabel->setText("0/0");
+  clearSelectedImage();
 
   QFileSystemModel *model = new QFileSystemModel;
   model->setRootPath(dir_path);
+  model->setNameFilterDisables(false);
+  model->setNameFilters(filterList);
   ui.fileTreeView->setModel(model);
   ui.fileTreeView->setRootIndex(model->index(dir_path));
   ui.fileTreeView->hideColumn(1);
@@ -227,6 +228,11 @@ void RqtImagePublisher::on_openSettingsButton_clicked()
   ui.settingsWidget->setHidden(!ui.settingsWidget->isHidden());
 }
 
+void RqtImagePublisher::on_filterListButton_clicked()
+{
+  ui.filterListWidget->setHidden(!ui.filterListWidget->isHidden());
+}
+
 void RqtImagePublisher::on_settingsCancelButton_clicked()
 {
   pluginSettingsToUi();
@@ -238,6 +244,25 @@ void RqtImagePublisher::on_settingsApplyButton_clicked()
   uiToPluginSettings();
   ui.settingsWidget->hide();
   applySettings();
+}
+
+void RqtImagePublisher::on_filterListCancelButton_clicked()
+{
+  ui.filterListTextEdit->clear();
+  ui.filterListWidget->hide();
+}
+
+void RqtImagePublisher::on_filterListApplyButton_clicked()
+{
+  //ROS_INFO_STREAM("Selected image before: " << selected_image.isValid() << ", " << selected_image.row());
+  //QString selected_path = folder_model->filePath(selected_image);
+  QString content = ui.filterListTextEdit->toPlainText();
+  filterList = content.split('\n', QString::SkipEmptyParts);
+  folder_model->setNameFilters(filterList);
+  //QModelIndex index = folder_model->index(selected_path);
+  //ROS_INFO_STREAM("Selected image after: " << index.isValid() << ", " << index.row());
+  clearSelectedImage();
+  ui.filterListWidget->hide();
 }
 
 void RqtImagePublisher::on_publishContinuouslyCheckBox_toggled(bool checked)
@@ -278,6 +303,11 @@ void RqtImagePublisher::on_publishingTimer_timeout()
 
 bool RqtImagePublisher::loadImage(const QModelIndex &index)
 {
+  if (folder_model->isDir(index))
+  {
+    ROS_INFO_STREAM("Selection is directory");
+    return false;
+  }
   QString path = folder_model->filePath(index);
   QImage new_image;
   if (!new_image.load(path))
@@ -296,11 +326,7 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
 
   generateRosImage(); // convert image to ROS message for publishing
 
-  selected_image = index;
-  int num_imgs_in_folder = folder_model->rowCount(selected_image.parent());
-  int item_row = selected_image.row();
-  ui.curImageLabel->setText(QString::asprintf("%d/%d", item_row + 1, num_imgs_in_folder));
-  ui.fileTreeView->setCurrentIndex(selected_image);
+  setSelectedImage(index);
 
   ui.previousImageButton->setEnabled(true);
   ui.nextImageButton->setEnabled(true);
@@ -384,6 +410,28 @@ bool RqtImagePublisher::generateRosImage()
   image_ros.header.stamp = ros::Time::now();
   image_ros.header.frame_id = settings.frameId.toStdString();
   return true;
+}
+
+void RqtImagePublisher::setSelectedImage(QModelIndex index)
+{
+  selected_image = index;
+  int num_imgs_in_folder = folder_model->rowCount(selected_image.parent());
+  int item_row = selected_image.row();
+  ui.curImageLabel->setText(QString::asprintf("%d/%d", item_row + 1, num_imgs_in_folder));
+  ui.fileTreeView->setCurrentIndex(selected_image);
+}
+
+void RqtImagePublisher::clearSelectedImage()
+{
+  selected_image = QModelIndex();
+  ui.imageView->clear();
+  image_qimg = QImage();
+  image_qpix = QPixmap();
+  ui.previousImageButton->setEnabled(false);
+  ui.nextImageButton->setEnabled(false);
+  ui.publishButton->setEnabled(false);
+  ui.curImageLabel->setText("0/0");
+  ui.fileTreeView->clearSelection();
 }
 
 void RqtImagePublisher::pluginSettingsToUi()
