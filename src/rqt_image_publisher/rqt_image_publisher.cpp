@@ -76,7 +76,7 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("publishingFrequency", settings.publishingFrequency);
   instance_settings.setValue("rotateImages", settings.rotateImages);
   instance_settings.setValue("rotateBackwards", settings.rotateBackwards);
-  instance_settings.setValue("startDiashowOnLoad", settings.startDiashowOnLoad);
+  instance_settings.setValue("startSlideshowOnLoad", settings.startSlideshowOnLoad);
   instance_settings.setValue("rotationFrequency", settings.rotationFrequency);
   instance_settings.setValue("scaleWidth", settings.scaleWidth);
   instance_settings.setValue("width", settings.width);
@@ -95,7 +95,7 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.publishingFrequency = instance_settings.value("publishingFrequency", 1.0).toDouble();
   settings.rotateImages = instance_settings.value("rotateImages", false).toBool();
   settings.rotateBackwards = instance_settings.value("rotateBackwards", false).toBool();
-  settings.startDiashowOnLoad = instance_settings.value("startDiashowOnLoad", false).toBool();
+  settings.startSlideshowOnLoad = instance_settings.value("startSlideshowOnLoad", false).toBool();
   settings.rotationFrequency = instance_settings.value("rotationFrequency", 1.0).toDouble();
   settings.scaleWidth = instance_settings.value("scaleWidth", false).toBool();
   settings.width = instance_settings.value("width", 640).toInt();
@@ -188,15 +188,15 @@ void RqtImagePublisher::on_nextImageButton_clicked()
 
 void RqtImagePublisher::on_publishButton_clicked()
 {
-  if (settings.rotateImages) // this is start / stop diashow
+  if (settings.rotateImages) // this is start / stop slideshow
   {
-    if (publishingTimer.isActive()) // stop diashow
+    if (publishingTimer.isActive()) // stop slideshow
     {
-      stopDiashow();
+      stopSlideshow();
     }
-    else // start diashow
+    else // start slideshow
     {
-      startDiashow();
+      startSlideshow();
     }
   }
   else if (settings.publishContinuously)
@@ -254,7 +254,7 @@ void RqtImagePublisher::on_rotateImagesCheckBox_toggled(bool checked)
   ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinuouslyCheckBox->isChecked());
 
   ui.rotateBackwardsCheckBox->setEnabled(checked);
-  ui.startDiashowOnLoadCheckBox->setEnabled(checked);
+  ui.startSlideshowOnLoadCheckBox->setEnabled(checked);
   ui.rotationFrequencySpinBox->setEnabled(checked);
 }
 
@@ -308,9 +308,9 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
 
   if (settings.rotateImages)
   {
-    if (settings.startDiashowOnLoad && !publishingTimer.isActive())
+    if (settings.startSlideshowOnLoad && !publishingTimer.isActive())
     {
-      startDiashow();
+      startSlideshow();
     }
   }
   else if (settings.publishOnLoad)
@@ -328,18 +328,18 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   return true;
 }
 
-void RqtImagePublisher::startDiashow()
+void RqtImagePublisher::startSlideshow()
 {
   image_ros.header.stamp = ros::Time::now();
   image_pub.publish(image_ros);
   publishingTimer.start();
-  ui.publishButton->setText("Stop diashow");
+  ui.publishButton->setText("Stop slideshow");
 }
 
-void RqtImagePublisher::stopDiashow()
+void RqtImagePublisher::stopSlideshow()
 {
   publishingTimer.stop();
-  ui.publishButton->setText("Start diashow");
+  ui.publishButton->setText("Start slideshow");
 }
 
 void RqtImagePublisher::startPublishing()
@@ -396,7 +396,7 @@ void RqtImagePublisher::pluginSettingsToUi()
   ui.publishingFrequencySpinBox->setValue(settings.publishingFrequency);
   ui.rotateImagesCheckBox->setChecked(settings.rotateImages);
   ui.rotateBackwardsCheckBox->setChecked(settings.rotateBackwards);
-  ui.startDiashowOnLoadCheckBox->setChecked(settings.startDiashowOnLoad);
+  ui.startSlideshowOnLoadCheckBox->setChecked(settings.startSlideshowOnLoad);
   ui.rotationFrequencySpinBox->setValue(settings.rotationFrequency);
   ui.scaleWidthCheckBox->setChecked(settings.scaleWidth);
   ui.widthSpinBox->setValue(settings.width);
@@ -415,7 +415,7 @@ void RqtImagePublisher::uiToPluginSettings()
   settings.publishingFrequency = ui.publishingFrequencySpinBox->value();
   settings.rotateImages = ui.rotateImagesCheckBox->isChecked();
   settings.rotateBackwards = ui.rotateBackwardsCheckBox->isChecked();
-  settings.startDiashowOnLoad = ui.startDiashowOnLoadCheckBox->isChecked();
+  settings.startSlideshowOnLoad = ui.startSlideshowOnLoadCheckBox->isChecked();
   settings.rotationFrequency = ui.rotationFrequencySpinBox->value();
   settings.scaleWidth = ui.scaleWidthCheckBox->isChecked();
   settings.width = ui.widthSpinBox->value();
@@ -434,7 +434,7 @@ void RqtImagePublisher::applySettings()
 
   if (settings.rotateImages)
   {
-    ui.publishButton->setText("Start diashow");
+    ui.publishButton->setText("Start slideshow");
     publishingTimer.setInterval((int)(1000.0 / settings.rotationFrequency));
   }
   else if (settings.publishContinuously)

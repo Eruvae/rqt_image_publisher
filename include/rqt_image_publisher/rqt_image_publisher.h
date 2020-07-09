@@ -29,7 +29,7 @@ struct PluginSettings
   double publishingFrequency;
   bool rotateImages;
   bool rotateBackwards;
-  bool startDiashowOnLoad;
+  bool startSlideshowOnLoad;
   double rotationFrequency;
   bool scaleWidth;
   int width;
@@ -82,8 +82,8 @@ private slots:
 
 private:
   bool loadImage(const QModelIndex &index);
-  void startDiashow();
-  void stopDiashow();
+  void startSlideshow();
+  void stopSlideshow();
   void startPublishing();
   void stopPublishing();
   bool generateRosImage();
