@@ -42,6 +42,7 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   widget = new RqtImagePublisherWidget(this);
   // extend the widget with all attributes and children from UI file
   ui.setupUi(widget);
+  ui.settingsWidget->hide();
   // add widget to the user interface
   context.addWidget(widget);
 
@@ -51,9 +52,14 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
 
   connect(ui.selectFolderButton, SIGNAL(clicked()), this, SLOT(on_selectFolderButton_clicked()));
   connect(ui.fileTreeView, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(on_fileTreeView_doubleClicked(QModelIndex)));
-  connect(ui.previousImageButton, SIGNAL(clicked(bool)), this, SLOT(on_previousImageButton_clicked()));
-  connect(ui.nextImageButton, SIGNAL(clicked(bool)), this, SLOT(on_nextImageButton_clicked()));
-  connect(ui.publishButton, SIGNAL(clicked(bool)), this, SLOT(on_publishButton_clicked()));
+  connect(ui.previousImageButton, SIGNAL(clicked()), this, SLOT(on_previousImageButton_clicked()));
+  connect(ui.nextImageButton, SIGNAL(clicked()), this, SLOT(on_nextImageButton_clicked()));
+  connect(ui.publishButton, SIGNAL(clicked()), this, SLOT(on_publishButton_clicked()));
+  connect(ui.openSettingsButton, SIGNAL(clicked()), this, SLOT(on_openSettingsButton_clicked()));
+  connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
+  connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
+  connect(ui.publishContinouslyRadioButton, SIGNAL(toggled(bool)), this, SLOT(on_publishContinouslyRadioButton_toggled(bool)));
+  connect(ui.rotateImagesCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_rotateImagesCheckBox_toggled(bool)));
 }
 
 void RqtImagePublisher::shutdownPlugin()
@@ -158,6 +164,38 @@ void RqtImagePublisher::on_publishButton_clicked()
   image_pub.publish(image_ros);
 }
 
+void RqtImagePublisher::on_openSettingsButton_clicked()
+{
+  ui.settingsWidget->show();
+}
+
+void RqtImagePublisher::on_settingsCancelButton_clicked()
+{
+  ui.settingsWidget->hide();
+}
+
+void RqtImagePublisher::on_settingsApplyButton_clicked()
+{
+  ui.settingsWidget->hide();
+}
+
+void RqtImagePublisher::on_publishContinouslyRadioButton_toggled(bool checked)
+{
+  ui.publishingFrequencySpinBox->setEnabled(checked);
+}
+
+void RqtImagePublisher::on_rotateImagesCheckBox_toggled(bool checked)
+{
+  ui.publishOnceRadioButton->setEnabled(!checked);
+  ui.publishLatchedRadioButton->setEnabled(!checked);
+  ui.publishContinouslyRadioButton->setEnabled(!checked);
+  ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinouslyRadioButton->isChecked());
+
+  ui.rotateBackwardsCheckBox->setEnabled(checked);
+  ui.diashowFrequencySpinBox->setEnabled(checked);
+}
+
+
 bool RqtImagePublisher::loadImage(const QModelIndex &index)
 {
   QString path = folder_model->filePath(index);
@@ -206,4 +244,3 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
 
 PLUGINLIB_EXPORT_CLASS(rqt_image_publisher::RqtImagePublisher, rqt_gui_cpp::Plugin)
 //PLUGINLIB_DECLARE_CLASS(rqt_image_publisher, RqtImagePublisher, rqt_image_publisher::RqtImagePublisher, rqt_gui_cpp::Plugin)
-

@@ -11,6 +11,18 @@
 namespace rqt_image_publisher
 {
 
+struct PluginSettings
+{
+  QString imageTopic;
+  QString frameId;
+  bool publishLatched;
+  bool publishContinously;
+  double publishingFrequency;
+  bool rotateImages;
+  bool rotateBackwards;
+  double rotationFrequency;
+};
+
 class RqtImagePublisher;
 
 class RqtImagePublisherWidget : public QWidget
@@ -43,8 +55,13 @@ private slots:
   void on_fileTreeView_doubleClicked(const QModelIndex &index);
   void on_nextImageButton_clicked();
   void on_previousImageButton_clicked();
-
   void on_publishButton_clicked();
+  void on_openSettingsButton_clicked();
+  void on_settingsCancelButton_clicked();
+  void on_settingsApplyButton_clicked();
+  void on_publishSettingsRadioButton_clicked();
+  void on_publishContinouslyRadioButton_toggled(bool checked);
+  void on_rotateImagesCheckBox_toggled(bool checked);
 
 signals:
 

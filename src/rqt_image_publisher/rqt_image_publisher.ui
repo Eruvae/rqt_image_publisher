@@ -6,25 +6,93 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>638</width>
-    <height>532</height>
+    <width>708</width>
+    <height>479</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>Form</string>
   </property>
-  <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <widget class="QTreeView" name="fileTreeView">
+  <layout class="QGridLayout" name="mainWindowGridLayout">
+   <item row="1" column="5">
+    <widget class="QPushButton" name="publishButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
+      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="text">
+      <string>Publish</string>
+     </property>
     </widget>
    </item>
-   <item row="0" column="1" rowspan="2" colspan="4">
+   <item row="1" column="2">
+    <widget class="QToolButton" name="previousImageButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&lt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="4">
+    <widget class="QToolButton" name="nextImageButton">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <widget class="QLabel" name="curImageLabel">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="text">
+      <string>0/0</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="6">
+    <widget class="QToolButton" name="openSettingsButton">
+     <property name="text">
+      <string>⚙</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0" colspan="7">
+    <widget class="QLineEdit" name="statusLineEdit">
+     <property name="readOnly">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="2" colspan="5">
     <widget class="QLabel" name="imageView">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Ignored" vsizetype="Ignored">
@@ -44,13 +112,6 @@
     </widget>
    </item>
    <item row="1" column="0">
-    <widget class="QCheckBox" name="publishOnLoadCheckBox">
-     <property name="text">
-      <string>Publish on load</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="0">
     <widget class="QPushButton" name="selectFolderButton">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
@@ -63,62 +124,192 @@
      </property>
     </widget>
    </item>
-   <item row="2" column="1">
-    <widget class="QPushButton" name="previousImageButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>&lt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="2">
-    <widget class="QLabel" name="curImageLabel">
+   <item row="0" column="0" colspan="2">
+    <widget class="QTreeView" name="fileTreeView">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+      <sizepolicy hsizetype="Maximum" vsizetype="Expanding">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="text">
-      <string>0/0</string>
-     </property>
-     <property name="alignment">
-      <set>Qt::AlignCenter</set>
-     </property>
     </widget>
    </item>
-   <item row="2" column="3">
-    <widget class="QPushButton" name="nextImageButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="2" column="4">
-    <widget class="QPushButton" name="publishButton">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
+   <item row="3" column="0" colspan="7">
+    <widget class="QWidget" name="settingsWidget" native="true">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="text">
-      <string>Publish</string>
+     <property name="minimumSize">
+      <size>
+       <width>0</width>
+       <height>0</height>
+      </size>
      </property>
+     <layout class="QGridLayout" name="settingsWidgetGridLayout">
+      <property name="topMargin">
+       <number>0</number>
+      </property>
+      <property name="rightMargin">
+       <number>0</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="imageTopicLabel">
+        <property name="text">
+         <string>Image topic</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="imageTopicTextEdit"/>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="frameIdLabel">
+        <property name="text">
+         <string>Frame ID</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="frameIdTextEdit"/>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="publishingLabel">
+        <property name="text">
+         <string>Publishing</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QHBoxLayout" name="settingsPublishingLayout">
+        <item>
+         <widget class="QRadioButton" name="publishOnceRadioButton">
+          <property name="text">
+           <string>Once</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="publishLatchedRadioButton">
+          <property name="text">
+           <string>Latched</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QRadioButton" name="publishContinouslyRadioButton">
+          <property name="text">
+           <string>Continously</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="publishingFrequencySpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="prefix">
+           <string>Frequency: </string>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="0">
+       <widget class="QLabel" name="diashowLabel">
+        <property name="text">
+         <string>Diashow</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <layout class="QHBoxLayout" name="settingsDiashowLayout">
+        <item>
+         <widget class="QCheckBox" name="rotateImagesCheckBox">
+          <property name="text">
+           <string>Rotate images</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="rotateBackwardsCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Backwards</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="diashowFrequencySpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="prefix">
+           <string>Frequency: </string>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="1">
+       <layout class="QHBoxLayout" name="applyButtonsLayout">
+        <item>
+         <widget class="QPushButton" name="settingsCancelButton">
+          <property name="text">
+           <string>Cancel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="settingsApplyButton">
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
     </widget>
    </item>
-   <item row="3" column="0" colspan="5">
-    <widget class="QLineEdit" name="statusLineEdit">
-     <property name="readOnly">
-      <bool>true</bool>
+   <item row="1" column="1">
+    <widget class="QCheckBox" name="publishOnLoadCheckBox">
+     <property name="text">
+      <string>Publish on load</string>
      </property>
     </widget>
    </item>
