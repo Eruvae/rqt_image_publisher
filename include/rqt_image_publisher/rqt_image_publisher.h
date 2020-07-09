@@ -2,11 +2,19 @@
 #define RQT_IMAGE_PUBLISHER_H
 
 #include <QWidget>
+#include <QFileSystemModel>
+#include <QTimer>
+#include <QImage>
+#include <QPixmap>
+#include <QModelIndex>
+#include <QString>
+
 #include <ros/ros.h>
 #include <rqt_gui_cpp/plugin.h>
-#include "ui_rqt_image_publisher.h"
 #include <image_transport/image_transport.h>
-#include <QFileSystemModel>
+#include <sensor_msgs/Image.h>
+
+#include "ui_rqt_image_publisher.h"
 
 namespace rqt_image_publisher
 {
@@ -17,10 +25,11 @@ struct PluginSettings
   QString frameId;
   bool publishOnLoad;
   bool publishLatched;
-  bool publishContinously;
+  bool publishContinuously;
   double publishingFrequency;
   bool rotateImages;
   bool rotateBackwards;
+  bool startDiashowOnLoad;
   double rotationFrequency;
   bool scaleWidth;
   int width;
@@ -67,13 +76,16 @@ private slots:
   void on_openSettingsButton_clicked();
   void on_settingsCancelButton_clicked();
   void on_settingsApplyButton_clicked();
-  void on_publishContinouslyCheckBox_toggled(bool checked);
+  void on_publishContinuouslyCheckBox_toggled(bool checked);
   void on_rotateImagesCheckBox_toggled(bool checked);
-
-signals:
+  void on_publishingTimer_timeout();
 
 private:
   bool loadImage(const QModelIndex &index);
+  void startDiashow();
+  void stopDiashow();
+  void startPublishing();
+  void stopPublishing();
   bool generateRosImage();
   void pluginSettingsToUi();
   void uiToPluginSettings();
@@ -83,6 +95,7 @@ private:
   RqtImagePublisherWidget* widget;
   image_transport::ImageTransport *imt;
   image_transport::Publisher image_pub;
+  QTimer publishingTimer;
 
   QFileSystemModel *folder_model;
 

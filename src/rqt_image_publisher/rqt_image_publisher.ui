@@ -207,9 +207,9 @@
          </widget>
         </item>
         <item>
-         <widget class="QCheckBox" name="publishContinouslyCheckBox">
+         <widget class="QCheckBox" name="publishContinuouslyCheckBox">
           <property name="text">
-           <string>Continously</string>
+           <string>Continuously</string>
           </property>
          </widget>
         </item>
@@ -260,6 +260,16 @@
           </property>
           <property name="text">
            <string>Backwards</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="startDiashowOnLoadCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Start on load</string>
           </property>
          </widget>
         </item>

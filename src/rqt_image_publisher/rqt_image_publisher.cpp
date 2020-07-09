@@ -3,9 +3,6 @@
 #include <pluginlib/class_list_macros.h>
 #include <QStringList>
 #include <QFileDialog>
-#include <QImage>
-#include <QThread>
-#include <sensor_msgs/Image.h>
 #include <sensor_msgs/image_encodings.h>
 
 namespace rqt_image_publisher
@@ -29,7 +26,8 @@ void RqtImagePublisherWidget::resizeEvent(QResizeEvent *event)
 RqtImagePublisher::RqtImagePublisher() :
   rqt_gui_cpp::Plugin(),
   widget(Q_NULLPTR),
-  folder_model(Q_NULLPTR)
+  folder_model(Q_NULLPTR),
+  publishingTimer(this)
 {
   setObjectName("RqtImagePublisher");
 }
@@ -56,8 +54,9 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.openSettingsButton, SIGNAL(clicked()), this, SLOT(on_openSettingsButton_clicked()));
   connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
   connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
-  connect(ui.publishContinouslyCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_publishContinouslyCheckBox_toggled(bool)));
+  connect(ui.publishContinuouslyCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_publishContinuouslyCheckBox_toggled(bool)));
   connect(ui.rotateImagesCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_rotateImagesCheckBox_toggled(bool)));
+  connect(&publishingTimer, SIGNAL(timeout()), this, SLOT(on_publishingTimer_timeout()));
 }
 
 void RqtImagePublisher::shutdownPlugin()
@@ -73,10 +72,11 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("frameId", settings.frameId);
   instance_settings.setValue("publishOnLoad", settings.publishOnLoad);
   instance_settings.setValue("publishLatched", settings.publishLatched);
-  instance_settings.setValue("publishContinously", settings.publishContinously);
+  instance_settings.setValue("publishContinuously", settings.publishContinuously);
   instance_settings.setValue("publishingFrequency", settings.publishingFrequency);
   instance_settings.setValue("rotateImages", settings.rotateImages);
   instance_settings.setValue("rotateBackwards", settings.rotateBackwards);
+  instance_settings.setValue("startDiashowOnLoad", settings.startDiashowOnLoad);
   instance_settings.setValue("rotationFrequency", settings.rotationFrequency);
   instance_settings.setValue("scaleWidth", settings.scaleWidth);
   instance_settings.setValue("width", settings.width);
@@ -91,10 +91,11 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.frameId = instance_settings.value("frameId", "").toString();
   settings.publishOnLoad = instance_settings.value("publishOnLoad", false).toBool();
   settings.publishLatched = instance_settings.value("publishLatched", false).toBool();
-  settings.publishContinously = instance_settings.value("publishContinously", false).toBool();
+  settings.publishContinuously = instance_settings.value("publishContinuously", false).toBool();
   settings.publishingFrequency = instance_settings.value("publishingFrequency", 1.0).toDouble();
   settings.rotateImages = instance_settings.value("rotateImages", false).toBool();
   settings.rotateBackwards = instance_settings.value("rotateBackwards", false).toBool();
+  settings.startDiashowOnLoad = instance_settings.value("startDiashowOnLoad", false).toBool();
   settings.rotationFrequency = instance_settings.value("rotationFrequency", 1.0).toDouble();
   settings.scaleWidth = instance_settings.value("scaleWidth", false).toBool();
   settings.width = instance_settings.value("width", 640).toInt();
@@ -187,8 +188,38 @@ void RqtImagePublisher::on_nextImageButton_clicked()
 
 void RqtImagePublisher::on_publishButton_clicked()
 {
-  image_ros.header.stamp = ros::Time::now();
-  image_pub.publish(image_ros);
+  if (settings.rotateImages) // this is start / stop diashow
+  {
+    if (publishingTimer.isActive()) // stop diashow
+    {
+      stopDiashow();
+    }
+    else // start diashow
+    {
+      startDiashow();
+    }
+  }
+  else if (settings.publishContinuously)
+  {
+    if (publishingTimer.isActive()) // stop publishing
+    {
+      stopPublishing();
+    }
+    else // start publishing
+    {
+      startPublishing();
+    }
+  }
+  else
+  {
+    image_ros.header.stamp = ros::Time::now();
+    image_pub.publish(image_ros);
+    if (settings.publishContinuously)
+    {
+      publishingTimer.stop();
+      publishingTimer.start();
+    }
+  }
 }
 
 void RqtImagePublisher::on_openSettingsButton_clicked()
@@ -209,7 +240,7 @@ void RqtImagePublisher::on_settingsApplyButton_clicked()
   applySettings();
 }
 
-void RqtImagePublisher::on_publishContinouslyCheckBox_toggled(bool checked)
+void RqtImagePublisher::on_publishContinuouslyCheckBox_toggled(bool checked)
 {
   ui.publishLatchedCheckBox->setEnabled(!checked && !ui.rotateImagesCheckBox->isChecked());
   ui.publishingFrequencySpinBox->setEnabled(checked && !ui.rotateImagesCheckBox->isChecked());
@@ -217,14 +248,33 @@ void RqtImagePublisher::on_publishContinouslyCheckBox_toggled(bool checked)
 
 void RqtImagePublisher::on_rotateImagesCheckBox_toggled(bool checked)
 {
-  ui.publishLatchedCheckBox->setEnabled(!checked && !ui.publishContinouslyCheckBox->isChecked());
-  ui.publishContinouslyCheckBox->setEnabled(!checked);
-  ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinouslyCheckBox->isChecked());
+  ui.publishOnLoadCheckBox->setEnabled(!checked);
+  ui.publishLatchedCheckBox->setEnabled(!checked && !ui.publishContinuouslyCheckBox->isChecked());
+  ui.publishContinuouslyCheckBox->setEnabled(!checked);
+  ui.publishingFrequencySpinBox->setEnabled(!checked && ui.publishContinuouslyCheckBox->isChecked());
 
   ui.rotateBackwardsCheckBox->setEnabled(checked);
+  ui.startDiashowOnLoadCheckBox->setEnabled(checked);
   ui.rotationFrequencySpinBox->setEnabled(checked);
 }
 
+void RqtImagePublisher::on_publishingTimer_timeout()
+{
+  if (settings.rotateImages)
+  {
+    if (settings.rotateBackwards)
+      on_previousImageButton_clicked();
+    else
+      on_nextImageButton_clicked();
+
+    image_pub.publish(image_ros);
+  }
+  else if (settings.publishContinuously)
+  {
+    image_ros.header.stamp = ros::Time::now();
+    image_pub.publish(image_ros);
+  }
+}
 
 bool RqtImagePublisher::loadImage(const QModelIndex &index)
 {
@@ -246,9 +296,6 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
 
   generateRosImage(); // convert image to ROS message for publishing
 
-  if (settings.publishOnLoad)
-    image_pub.publish(image_ros);
-
   selected_image = index;
   int num_imgs_in_folder = folder_model->rowCount(selected_image.parent());
   int item_row = selected_image.row();
@@ -259,7 +306,54 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   ui.nextImageButton->setEnabled(true);
   ui.publishButton->setEnabled(true);
 
+  if (settings.rotateImages)
+  {
+    if (settings.startDiashowOnLoad && !publishingTimer.isActive())
+    {
+      startDiashow();
+    }
+  }
+  else if (settings.publishOnLoad)
+  {
+    if (!settings.publishContinuously)
+    {
+      image_pub.publish(image_ros);
+    }
+    else if (!publishingTimer.isActive())
+    {
+      startPublishing();
+    }
+  }
+
   return true;
+}
+
+void RqtImagePublisher::startDiashow()
+{
+  image_ros.header.stamp = ros::Time::now();
+  image_pub.publish(image_ros);
+  publishingTimer.start();
+  ui.publishButton->setText("Stop diashow");
+}
+
+void RqtImagePublisher::stopDiashow()
+{
+  publishingTimer.stop();
+  ui.publishButton->setText("Start diashow");
+}
+
+void RqtImagePublisher::startPublishing()
+{
+  image_ros.header.stamp = ros::Time::now();
+  image_pub.publish(image_ros);
+  publishingTimer.start();
+  ui.publishButton->setText("Stop publishing");
+}
+
+void RqtImagePublisher::stopPublishing()
+{
+  publishingTimer.stop();
+  ui.publishButton->setText("Start publishing");
 }
 
 bool RqtImagePublisher::generateRosImage()
@@ -298,10 +392,11 @@ void RqtImagePublisher::pluginSettingsToUi()
   ui.frameIdTextEdit->setText(settings.frameId);
   ui.publishOnLoadCheckBox->setChecked(settings.publishOnLoad);
   ui.publishLatchedCheckBox->setChecked(settings.publishLatched);
-  ui.publishContinouslyCheckBox->setChecked(settings.publishContinously);
+  ui.publishContinuouslyCheckBox->setChecked(settings.publishContinuously);
   ui.publishingFrequencySpinBox->setValue(settings.publishingFrequency);
   ui.rotateImagesCheckBox->setChecked(settings.rotateImages);
   ui.rotateBackwardsCheckBox->setChecked(settings.rotateBackwards);
+  ui.startDiashowOnLoadCheckBox->setChecked(settings.startDiashowOnLoad);
   ui.rotationFrequencySpinBox->setValue(settings.rotationFrequency);
   ui.scaleWidthCheckBox->setChecked(settings.scaleWidth);
   ui.widthSpinBox->setValue(settings.width);
@@ -316,10 +411,11 @@ void RqtImagePublisher::uiToPluginSettings()
   settings.frameId = ui.frameIdTextEdit->text();
   settings.publishOnLoad = ui.publishOnLoadCheckBox->isChecked();
   settings.publishLatched = ui.publishLatchedCheckBox->isChecked();
-  settings.publishContinously = ui.publishContinouslyCheckBox->isChecked();
+  settings.publishContinuously = ui.publishContinuouslyCheckBox->isChecked();
   settings.publishingFrequency = ui.publishingFrequencySpinBox->value();
   settings.rotateImages = ui.rotateImagesCheckBox->isChecked();
   settings.rotateBackwards = ui.rotateBackwardsCheckBox->isChecked();
+  settings.startDiashowOnLoad = ui.startDiashowOnLoadCheckBox->isChecked();
   settings.rotationFrequency = ui.rotationFrequencySpinBox->value();
   settings.scaleWidth = ui.scaleWidthCheckBox->isChecked();
   settings.width = ui.widthSpinBox->value();
@@ -330,10 +426,27 @@ void RqtImagePublisher::uiToPluginSettings()
 
 void RqtImagePublisher::applySettings()
 {
+  publishingTimer.stop();
   image_pub.shutdown();
-  bool latched = settings.publishLatched && !settings.publishContinously && !settings.rotateImages;
+  bool latched = settings.publishLatched && !settings.publishContinuously && !settings.rotateImages;
   image_pub = imt->advertise(settings.imageTopic.toStdString(), 1, latched);
   generateRosImage();
+
+  if (settings.rotateImages)
+  {
+    ui.publishButton->setText("Start diashow");
+    publishingTimer.setInterval((int)(1000.0 / settings.rotationFrequency));
+  }
+  else if (settings.publishContinuously)
+  {
+    ui.publishButton->setText("Start publishing");
+    publishingTimer.setInterval((int)(1000.0 / settings.publishingFrequency));
+  }
+  else
+  {
+    ui.publishButton->setText("Publish");
+  }
+
 }
 
 } // namespace rqt_image_publisher
