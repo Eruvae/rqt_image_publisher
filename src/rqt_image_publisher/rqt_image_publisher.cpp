@@ -78,6 +78,11 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("rotateImages", settings.rotateImages);
   instance_settings.setValue("rotateBackwards", settings.rotateBackwards);
   instance_settings.setValue("rotationFrequency", settings.rotationFrequency);
+  instance_settings.setValue("scaleWidth", settings.scaleWidth);
+  instance_settings.setValue("width", settings.width);
+  instance_settings.setValue("scaleHeight", settings.scaleHeight);
+  instance_settings.setValue("height", settings.height);
+  instance_settings.setValue("keepRatio", settings.keepRatio);
 }
 
 void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings)
@@ -91,6 +96,11 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.rotateImages = instance_settings.value("rotateImages", false).toBool();
   settings.rotateBackwards = instance_settings.value("rotateBackwards", false).toBool();
   settings.rotationFrequency = instance_settings.value("rotationFrequency", 1.0).toDouble();
+  settings.scaleWidth = instance_settings.value("scaleWidth", false).toBool();
+  settings.width = instance_settings.value("width", 640).toInt();
+  settings.scaleHeight = instance_settings.value("scaleHeight", false).toBool();
+  settings.height = instance_settings.value("height", 480).toInt();
+  settings.keepRatio = instance_settings.value("keepRatio", true).toBool();
 
   pluginSettingsToUi();
   applySettings();
@@ -234,16 +244,7 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   int h = ui.imageView->height();
   ui.imageView->setPixmap(image_qpix.scaled(w,h,Qt::KeepAspectRatio));
 
-  // convert image to ROS message for publishing
-  QImage qt_image_rgb8 = image_qimg.convertToFormat(QImage::Format_RGB888);
-  image_ros.height = qt_image_rgb8.height();
-  image_ros.width = qt_image_rgb8.width();
-  image_ros.encoding = sensor_msgs::image_encodings::RGB8;
-  image_ros.step = qt_image_rgb8.bytesPerLine();
-  image_ros.data.resize(qt_image_rgb8.byteCount());
-  memcpy(image_ros.data.data(), qt_image_rgb8.bits(), qt_image_rgb8.byteCount());
-  image_ros.header.stamp = ros::Time::now();
-  image_ros.header.frame_id = settings.frameId.toStdString();
+  generateRosImage(); // convert image to ROS message for publishing
 
   if (settings.publishOnLoad)
     image_pub.publish(image_ros);
@@ -261,6 +262,36 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   return true;
 }
 
+bool RqtImagePublisher::generateRosImage()
+{
+  if (image_qimg.isNull())
+    return false;
+
+  QImage qt_image_rgb8 = image_qimg.convertToFormat(QImage::Format_RGB888);
+  if (settings.scaleWidth && settings.scaleHeight)
+  {
+    Qt::AspectRatioMode aspectMode = settings.keepRatio ? Qt::AspectRatioMode::KeepAspectRatio : Qt::AspectRatioMode::IgnoreAspectRatio;
+    qt_image_rgb8 = qt_image_rgb8.scaled(settings.width, settings.height, aspectMode);
+  }
+  else if (settings.scaleWidth)
+  {
+    qt_image_rgb8 = qt_image_rgb8.scaledToWidth(settings.width);
+  }
+  else if (settings.scaleHeight)
+  {
+    qt_image_rgb8 = qt_image_rgb8.scaledToHeight(settings.height);
+  }
+  image_ros.height = qt_image_rgb8.height();
+  image_ros.width = qt_image_rgb8.width();
+  image_ros.encoding = sensor_msgs::image_encodings::RGB8;
+  image_ros.step = qt_image_rgb8.bytesPerLine();
+  image_ros.data.resize(qt_image_rgb8.byteCount());
+  memcpy(image_ros.data.data(), qt_image_rgb8.bits(), qt_image_rgb8.byteCount());
+  image_ros.header.stamp = ros::Time::now();
+  image_ros.header.frame_id = settings.frameId.toStdString();
+  return true;
+}
+
 void RqtImagePublisher::pluginSettingsToUi()
 {
   ui.imageTopicTextEdit->setText(settings.imageTopic);
@@ -272,6 +303,11 @@ void RqtImagePublisher::pluginSettingsToUi()
   ui.rotateImagesCheckBox->setChecked(settings.rotateImages);
   ui.rotateBackwardsCheckBox->setChecked(settings.rotateBackwards);
   ui.rotationFrequencySpinBox->setValue(settings.rotationFrequency);
+  ui.scaleWidthCheckBox->setChecked(settings.scaleWidth);
+  ui.widthSpinBox->setValue(settings.width);
+  ui.scaleHeightCheckBox->setChecked(settings.scaleHeight);
+  ui.heightSpinBox->setValue(settings.height);
+  ui.keepRatioCheckBox->setChecked(settings.keepRatio);
 }
 
 void RqtImagePublisher::uiToPluginSettings()
@@ -285,6 +321,11 @@ void RqtImagePublisher::uiToPluginSettings()
   settings.rotateImages = ui.rotateImagesCheckBox->isChecked();
   settings.rotateBackwards = ui.rotateBackwardsCheckBox->isChecked();
   settings.rotationFrequency = ui.rotationFrequencySpinBox->value();
+  settings.scaleWidth = ui.scaleWidthCheckBox->isChecked();
+  settings.width = ui.widthSpinBox->value();
+  settings.scaleHeight = ui.scaleHeightCheckBox->isChecked();
+  settings.height = ui.heightSpinBox->value();
+  settings.keepRatio = ui.keepRatioCheckBox->isChecked();
 }
 
 void RqtImagePublisher::applySettings()
@@ -292,7 +333,7 @@ void RqtImagePublisher::applySettings()
   image_pub.shutdown();
   bool latched = settings.publishLatched && !settings.publishContinously && !settings.rotateImages;
   image_pub = imt->advertise(settings.imageTopic.toStdString(), 1, latched);
-  image_ros.header.frame_id = settings.frameId.toStdString();
+  generateRosImage();
 }
 
 } // namespace rqt_image_publisher

@@ -22,6 +22,11 @@ struct PluginSettings
   bool rotateImages;
   bool rotateBackwards;
   double rotationFrequency;
+  bool scaleWidth;
+  int width;
+  bool scaleHeight;
+  int height;
+  bool keepRatio;
 };
 
 class RqtImagePublisher;
@@ -69,6 +74,7 @@ signals:
 
 private:
   bool loadImage(const QModelIndex &index);
+  bool generateRosImage();
   void pluginSettingsToUi();
   void uiToPluginSettings();
   void applySettings();
