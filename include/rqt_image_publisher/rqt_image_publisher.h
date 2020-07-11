@@ -37,6 +37,7 @@ struct PluginSettings
   bool scaleHeight;
   int height;
   bool keepRatio;
+  QStringList filters;
 };
 
 class RqtImagePublisher;
@@ -105,7 +106,6 @@ private:
   QTimer publishingTimer;
 
   QFileSystemModel *folder_model;
-  QStringList filterList;
 
   QModelIndex selected_image;
   QImage image_qimg;

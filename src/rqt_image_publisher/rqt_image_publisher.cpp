@@ -88,6 +88,7 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("scaleHeight", settings.scaleHeight);
   instance_settings.setValue("height", settings.height);
   instance_settings.setValue("keepRatio", settings.keepRatio);
+  instance_settings.setValue("filters", settings.filters);
 }
 
 void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings)
@@ -107,7 +108,9 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.scaleHeight = instance_settings.value("scaleHeight", false).toBool();
   settings.height = instance_settings.value("height", 480).toInt();
   settings.keepRatio = instance_settings.value("keepRatio", true).toBool();
+  settings.filters = instance_settings.value("filters", QStringList()).toStringList();
 
+  ui.filterListTextEdit->setPlainText(settings.filters.join('\n'));
   pluginSettingsToUi();
   applySettings();
 }
@@ -133,7 +136,7 @@ void RqtImagePublisher::on_selectFolderButton_clicked()
   QFileSystemModel *model = new QFileSystemModel;
   model->setRootPath(dir_path);
   model->setNameFilterDisables(false);
-  model->setNameFilters(filterList);
+  model->setNameFilters(settings.filters);
   ui.fileTreeView->setModel(model);
   ui.fileTreeView->setRootIndex(model->index(dir_path));
   ui.fileTreeView->hideColumn(1);
@@ -215,11 +218,6 @@ void RqtImagePublisher::on_publishButton_clicked()
   {
     image_ros.header.stamp = ros::Time::now();
     image_pub.publish(image_ros);
-    if (settings.publishContinuously)
-    {
-      publishingTimer.stop();
-      publishingTimer.start();
-    }
   }
 }
 
@@ -248,7 +246,7 @@ void RqtImagePublisher::on_settingsApplyButton_clicked()
 
 void RqtImagePublisher::on_filterListCancelButton_clicked()
 {
-  ui.filterListTextEdit->clear();
+  ui.filterListTextEdit->setPlainText(settings.filters.join('\n'));
   ui.filterListWidget->hide();
 }
 
@@ -257,11 +255,16 @@ void RqtImagePublisher::on_filterListApplyButton_clicked()
   //ROS_INFO_STREAM("Selected image before: " << selected_image.isValid() << ", " << selected_image.row());
   //QString selected_path = folder_model->filePath(selected_image);
   QString content = ui.filterListTextEdit->toPlainText();
-  filterList = content.split('\n', QString::SkipEmptyParts);
-  folder_model->setNameFilters(filterList);
-  //QModelIndex index = folder_model->index(selected_path);
-  //ROS_INFO_STREAM("Selected image after: " << index.isValid() << ", " << index.row());
-  clearSelectedImage();
+  settings.filters = content.split('\n', QString::SkipEmptyParts);
+  ui.filterListTextEdit->setPlainText(settings.filters.join('\n'));
+
+  if (folder_model)
+  {
+    folder_model->setNameFilters(settings.filters);
+    //QModelIndex index = folder_model->index(selected_path);
+    //ROS_INFO_STREAM("Selected image after: " << index.isValid() << ", " << index.row());
+    clearSelectedImage();
+  }
   ui.filterListWidget->hide();
 }
 
