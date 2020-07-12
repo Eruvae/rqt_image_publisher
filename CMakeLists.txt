@@ -10,6 +10,7 @@ set (CATKIN_DEPENDENCIES
     rqt_gui_cpp
     image_transport
     sensor_msgs
+    cv_bridge
 )
 
 ## Find catkin macros and libraries
