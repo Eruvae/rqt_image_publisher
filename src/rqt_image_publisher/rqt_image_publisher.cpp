@@ -55,8 +55,15 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
   connect(ui.filterListApplyButton, SIGNAL(clicked()), this, SLOT(on_filterListApplyButton_clicked()));
   connect(ui.filterListCancelButton, SIGNAL(clicked()), this, SLOT(on_filterListCancelButton_clicked()));
+  connect(ui.cameraInfoCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_cameraInfoCheckBox_toggled(bool)));
+  connect(ui.scaleWidthCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_scaleWidthCheckBox_toggled(bool)));
+  connect(ui.scaleHeightCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_scaleHeightCheckBox_toggled(bool)));
   connect(ui.publishContinuouslyCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_publishContinuouslyCheckBox_toggled(bool)));
   connect(ui.rotateImagesCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_rotateImagesCheckBox_toggled(bool)));
+  connect(ui.scaleDepthCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_scaleDepthCheckBox_toggled(bool)));
+  connect(ui.dynamicRangeCheckbox, SIGNAL(toggled(bool)), this, SLOT(on_dynamicRangeCheckbox_toggled(bool)));
+  connect(ui.minRangeSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_minRangeSpinBox_valueChanged(double)));
+  connect(ui.maxRangeSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_maxRangeSpinBox_valueChanged(double)));
   connect(&publishingTimer, SIGNAL(timeout()), this, SLOT(on_publishingTimer_timeout()));
 }
 
@@ -64,6 +71,7 @@ void RqtImagePublisher::shutdownPlugin()
 {
   // unregister all publishers here
   image_pub.shutdown();
+  camera_info_pub.shutdown();
   delete imt;
   if (folder_model)
     delete folder_model;
@@ -73,11 +81,13 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
 {
   instance_settings.setValue("imageTopic", settings.imageTopic);
   instance_settings.setValue("frameId", settings.frameId);
-  instance_settings.setValue("imageType", settings.imageType);
-  instance_settings.setValue("colorEnc", settings.colorEnc);
-  instance_settings.setValue("colorAlphaEnc", settings.colorAlphaEnc);
-  instance_settings.setValue("monoEnc", settings.monoEnc);
-  instance_settings.setValue("depthEnc", settings.depthEnc);
+  instance_settings.setValue("generateCameraInfo", settings.generateCameraInfo);
+  instance_settings.setValue("cameraInfoTopic", settings.cameraInfoTopic);
+  instance_settings.setValue("imageType", (int)settings.imageType);
+  instance_settings.setValue("colorEnc", (int)settings.colorEnc);
+  instance_settings.setValue("colorAlphaEnc", (int)settings.colorAlphaEnc);
+  instance_settings.setValue("monoEnc", (int)settings.monoEnc);
+  instance_settings.setValue("depthEnc", (int)settings.depthEnc);
   instance_settings.setValue("publishOnLoad", settings.publishOnLoad);
   instance_settings.setValue("publishLatched", settings.publishLatched);
   instance_settings.setValue("publishContinuously", settings.publishContinuously);
@@ -91,6 +101,10 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("scaleHeight", settings.scaleHeight);
   instance_settings.setValue("height", settings.height);
   instance_settings.setValue("keepRatio", settings.keepRatio);
+  instance_settings.setValue("scaleDepth", settings.scaleDepth);
+  instance_settings.setValue("dynamicDepthRange", settings.dynamicDepthRange);
+  instance_settings.setValue("depthMinRange", settings.depthMinRange);
+  instance_settings.setValue("depthMaxRange", settings.depthMaxRange);
   instance_settings.setValue("filters", settings.filters);
   instance_settings.setValue("lastFolder", settings.lastFolder);
 }
@@ -99,11 +113,13 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
 {
   settings.imageTopic = instance_settings.value("imageTopic", "/image").toString();
   settings.frameId = instance_settings.value("frameId", "").toString();
-  settings.imageType = instance_settings.value("imageType", 0).toInt();
-  settings.colorEnc = instance_settings.value("colorEnc", 0).toInt();
-  settings.colorAlphaEnc = instance_settings.value("colorAlphaEnc", 0).toInt();
-  settings.monoEnc = instance_settings.value("monoEnc", 0).toInt();
-  settings.depthEnc = instance_settings.value("depthEnc", 0).toInt();
+  settings.generateCameraInfo = instance_settings.value("generateCameraInfo", false).toBool();
+  settings.cameraInfoTopic = instance_settings.value("cameraInfoTopic", "/camera_info").toString();
+  settings.imageType = (ImageType)instance_settings.value("imageType", 0).toInt();
+  settings.colorEnc = (Encoding)instance_settings.value("colorEnc", 0).toInt();
+  settings.colorAlphaEnc = (Encoding)instance_settings.value("colorAlphaEnc", 0).toInt();
+  settings.monoEnc = (Encoding)instance_settings.value("monoEnc", 0).toInt();
+  settings.depthEnc = (Encoding)instance_settings.value("depthEnc", 0).toInt();
   settings.publishOnLoad = instance_settings.value("publishOnLoad", false).toBool();
   settings.publishLatched = instance_settings.value("publishLatched", false).toBool();
   settings.publishContinuously = instance_settings.value("publishContinuously", false).toBool();
@@ -117,6 +133,10 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.scaleHeight = instance_settings.value("scaleHeight", false).toBool();
   settings.height = instance_settings.value("height", 480).toInt();
   settings.keepRatio = instance_settings.value("keepRatio", true).toBool();
+  settings.scaleDepth = instance_settings.value("scaleDepth", true).toBool();
+  settings.dynamicDepthRange = instance_settings.value("dynamicDepthRange", false).toBool();
+  settings.depthMinRange = instance_settings.value("depthMinRange", 0.0).toDouble();
+  settings.depthMaxRange = instance_settings.value("depthMaxRange", 10.0).toDouble();
   settings.filters = instance_settings.value("filters", QStringList()).toStringList();
   settings.lastFolder = instance_settings.value("lastFolder", QString()).toString();
 
@@ -228,8 +248,7 @@ void RqtImagePublisher::on_publishButton_clicked()
   }
   else
   {
-    image_ros.header.stamp = ros::Time::now();
-    image_pub.publish(image_ros);
+    publishImage();
   }
 }
 
@@ -285,6 +304,34 @@ void RqtImagePublisher::on_filterListApplyButton_clicked()
   rescaleImageLabel();
 }
 
+void RqtImagePublisher::on_cameraInfoCheckBox_toggled(bool checked)
+{
+  ui.cameraInfoTopicLineEdit->setEnabled(checked);
+}
+
+void RqtImagePublisher::on_scaleWidthCheckBox_toggled(bool checked)
+{
+  ui.widthSpinBox->setEnabled(checked);
+}
+
+void RqtImagePublisher::on_scaleHeightCheckBox_toggled(bool checked)
+{
+  ui.heightSpinBox->setEnabled(checked);
+}
+
+void RqtImagePublisher::on_scaleDepthCheckBox_toggled(bool checked)
+{
+  ui.dynamicRangeCheckbox->setEnabled(checked);
+  ui.minRangeSpinBox->setEnabled(checked && !ui.dynamicRangeCheckbox->isChecked());
+  ui.maxRangeSpinBox->setEnabled(checked && !ui.dynamicRangeCheckbox->isChecked());
+}
+
+void RqtImagePublisher::on_dynamicRangeCheckbox_toggled(bool checked)
+{
+  ui.minRangeSpinBox->setEnabled(!checked && ui.scaleDepthCheckBox->isChecked());
+  ui.maxRangeSpinBox->setEnabled(!checked && ui.scaleDepthCheckBox->isChecked());
+}
+
 void RqtImagePublisher::on_publishContinuouslyCheckBox_toggled(bool checked)
 {
   ui.publishLatchedCheckBox->setEnabled(!checked && !ui.rotateImagesCheckBox->isChecked());
@@ -303,6 +350,18 @@ void RqtImagePublisher::on_rotateImagesCheckBox_toggled(bool checked)
   ui.rotationFrequencySpinBox->setEnabled(checked);
 }
 
+void RqtImagePublisher::on_minRangeSpinBox_valueChanged(double value)
+{
+  if (ui.maxRangeSpinBox->value() <= value)
+    ui.maxRangeSpinBox->setValue(value + 0.1);
+}
+
+void RqtImagePublisher::on_maxRangeSpinBox_valueChanged(double value)
+{
+  if (ui.minRangeSpinBox->value() >= value)
+    ui.minRangeSpinBox->setValue(value - 0.1);
+}
+
 void RqtImagePublisher::on_publishingTimer_timeout()
 {
   if (settings.rotateImages)
@@ -312,12 +371,11 @@ void RqtImagePublisher::on_publishingTimer_timeout()
     else
       on_nextImageButton_clicked();
 
-    image_pub.publish(image_ros);
+    publishImage();
   }
   else if (settings.publishContinuously)
   {
-    image_ros.header.stamp = ros::Time::now();
-    image_pub.publish(image_ros);
+    publishImage();
   }
 }
 
@@ -375,7 +433,7 @@ bool RqtImagePublisher::loadImage(const QModelIndex &index)
   {
     if (!settings.publishContinuously)
     {
-      image_pub.publish(image_ros);
+      publishImage();
     }
     else if (!publishingTimer.isActive())
     {
@@ -409,6 +467,101 @@ cv::Mat RqtImagePublisher::convertToDepth(const cv::Mat &mat, int depth)
     mat.convertTo(mat_conv, depth);
 
   return mat_conv;
+}
+
+cv::Mat RqtImagePublisher::convertDepthForDisplay(const cv::Mat &mat)
+{
+  cv::Mat mat_conv;
+  int d = mat.depth();
+  double min_depth, max_depth;
+  if (settings.dynamicDepthRange)
+  {
+    /*min_depth = DBL_MAX, max_depth = 0;
+    if (d == CV_16U)
+    {
+      uint16_t mind = UINT16_MAX, maxd = 0;
+      for (auto it = mat.begin<uint16_t>(), end = mat.end<uint16_t>(); it != end; it++)
+      {
+        if (*it == 0) continue; // 0 is invalid depth
+        if (*it < mind) mind = *it;
+        if (*it > maxd) maxd = *it;
+      }
+      min_depth = mind / 1000.0;
+      max_depth = maxd / 1000.0;
+    }
+    else //CV_32F
+    {
+      for (auto it = mat.begin<float>(), end = mat.end<float>(); it != end; it++)
+      {
+        if (!std::isfinite(*it)) continue;
+        if (*it < min_depth) min_depth = *it;
+        if (*it > max_depth) max_depth = *it;
+      }
+    }*/
+    cv::Scalar mean, stddev;
+    cv::meanStdDev(mat, mean, stddev);
+    ROS_INFO_STREAM("Mean: " << mean[0] << ", Stddev: " << stddev[0]);
+    min_depth = mean[0] - stddev[0];
+    if (min_depth < 0) min_depth = 0;
+    max_depth = mean[0] + stddev[0];
+
+    if (d == CV_16U)
+    {
+      min_depth /= 1000.0;
+      max_depth /= 1000.0;
+    }
+
+    ROS_INFO_STREAM("Dynamic range: " << min_depth << " - " << max_depth << " m");
+  }
+  else
+  {
+    min_depth = settings.depthMinRange;
+    max_depth = settings.depthMaxRange;
+  }
+  double depth_range = max_depth - min_depth;
+  if (d == CV_16U)
+  {
+    double alpha = 256.0/(depth_range*1000.0);
+    double beta = -alpha * (min_depth*1000.0);
+    mat.convertTo(mat_conv, CV_8U, alpha, beta);
+  }
+  else if (d == CV_32F)
+  {
+    double alpha = 256.0/depth_range;
+    double beta = -alpha * min_depth;
+    mat.convertTo(mat_conv, CV_8U, alpha, beta);
+  }
+  else
+  {
+    ROS_ERROR("Not a valid depth format, using default conversion");
+    mat_conv = convertToDepth(mat, CV_8U);
+  }
+  return mat_conv;
+}
+
+void RqtImagePublisher::removeDepthOutliers(cv::Mat &mat)
+{
+  cv::Scalar mean, stddev;
+  cv::meanStdDev(mat, mean, stddev);
+  ROS_INFO_STREAM("Mean: " << mean[0] << ", Stddev: " << stddev[0]);
+  double min_depth = mean[0] - 2 * stddev[0];
+  double max_depth = mean[0] + 2 * stddev[0];
+
+  if (mat.depth() == CV_16U)
+  {
+    for (auto it = mat.begin<uint16_t>(), end = mat.end<uint16_t>(); it != end; it++)
+    {
+      if (*it > max_depth || *it < min_depth) *it = 0;
+    }
+  }
+  else //CV_32F
+  {
+    for (auto it = mat.begin<float>(), end = mat.end<float>(); it != end; it++)
+    {
+      if (*it < min_depth) *it = -std::numeric_limits<float>::infinity();
+      else if (*it > max_depth) *it = std::numeric_limits<float>::infinity();
+    }
+  }
 }
 
 cv::Mat RqtImagePublisher::convertToEncoding(const cv::Mat &mat, Encoding enc, Encoding sourceEnc)
@@ -594,23 +747,49 @@ bool RqtImagePublisher::generateCvBridgeImage()
   }
 
   image_cvb.image = convertToEncoding(image_cvb.image, enc);
+  if (enc == ENC_16UC1 || enc == ENC_32FC1)
+  {
+    removeDepthOutliers(image_cvb.image);
+  }
+  image_encoding = enc;
 
   resizeCvBridgeImage();
 
   image_cvb.toImageMsg(image_ros);
 
-  ui.statusLineEdit->setText(QString::fromStdString("Image encoding: " + image_cvb.encoding));
+  if (settings.generateCameraInfo)
+    generateCameraInfo();
+
+  std::stringstream statusText;
+  statusText << "Image encoding: " << image_cvb.encoding << ", Size: " << image_cvb.image.size();
+  ui.statusLineEdit->setText(QString::fromStdString(statusText.str()));
 
   return true;
+}
+
+void RqtImagePublisher::generateCameraInfo()
+{
+  camera_info.header = image_ros.header;
+  camera_info.height = image_ros.height;
+  camera_info.width = image_ros.width;
+  camera_info.distortion_model = "plum_blob";
+  camera_info.D = {0.0, 0.0, 0.0, 0.0, 0.0};
+  camera_info.K = {621.173828125, 0.0, 323.92315673828125, 0.0, 620.6937866210938, 250.80247497558594, 0.0, 0.0, 1.0};
+  camera_info.R = {1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0};
+  camera_info.P = {621.173828125, 0.0, 323.92315673828125, 0.0, 0.0, 620.6937866210938, 250.80247497558594, 0.0, 0.0, 0.0, 1.0, 0.0};
 }
 
 void RqtImagePublisher::generatePixmap()
 {
   // convert to image with 8-bit unsigned depth
-  cv::Mat mat_8u = convertToDepth(image_cvb.image, CV_8U);
+  cv::Mat mat_8u;
+  if (settings.scaleDepth && (image_encoding == ENC_16UC1 || image_encoding == ENC_32FC1)) // use depth image conversion
+    mat_8u = convertDepthForDisplay(image_cvb.image);
+  else
+    mat_8u = convertToDepth(image_cvb.image, CV_8U);
 
   // convert to RGB
-  mat_8u = convertToEncoding(mat_8u, ENC_RGB8, stringToEncoding(image_cvb.encoding));
+  mat_8u = convertToEncoding(mat_8u, ENC_RGB8, image_encoding);
   image_qimg = QImage(mat_8u.data, mat_8u.cols, mat_8u.rows, mat_8u.step, QImage::Format_RGB888);
 
   ROS_INFO_STREAM("Image size: " << mat_8u.cols << ", " << mat_8u.rows);
@@ -618,6 +797,17 @@ void RqtImagePublisher::generatePixmap()
   // store loaded image as pixmap for display
   image_qpix = QPixmap::fromImage(image_qimg);
   rescaleImageLabel();
+}
+
+void RqtImagePublisher::publishImage()
+{
+  image_ros.header.stamp = ros::Time::now();
+  image_pub.publish(image_ros);
+  if (settings.generateCameraInfo)
+  {
+    camera_info.header.stamp = ros::Time::now();
+    camera_info_pub.publish(camera_info);
+  }
 }
 
 /*bool RqtImagePublisher::generateRosImage()
@@ -677,8 +867,7 @@ void RqtImagePublisher::clearSelectedImage()
 
 void RqtImagePublisher::startSlideshow()
 {
-  image_ros.header.stamp = ros::Time::now();
-  image_pub.publish(image_ros);
+  publishImage();
   publishingTimer.start();
   ui.publishButton->setText("Stop slideshow");
 }
@@ -691,8 +880,7 @@ void RqtImagePublisher::stopSlideshow()
 
 void RqtImagePublisher::startPublishing()
 {
-  image_ros.header.stamp = ros::Time::now();
-  image_pub.publish(image_ros);
+  publishImage();
   publishingTimer.start();
   ui.publishButton->setText("Stop publishing");
 }
@@ -707,7 +895,9 @@ void RqtImagePublisher::pluginSettingsToUi()
 {
   ui.imageTopicTextEdit->setText(settings.imageTopic);
   ui.frameIdTextEdit->setText(settings.frameId);
-  ui.typeComboBox->setCurrentIndex(settings.imageType);
+  ui.cameraInfoCheckBox->setChecked(settings.generateCameraInfo);
+  ui.cameraInfoTopicLineEdit->setText(settings.cameraInfoTopic);
+  ui.typeComboBox->setCurrentIndex((int)settings.imageType);
   ui.colorEncComboBox->setCurrentIndex(encodingToIndex(IT_COLOR, settings.colorEnc));
   ui.colorAlphaEncComboBox->setCurrentIndex(encodingToIndex(IT_COLOR_ALPHA, settings.colorAlphaEnc));
   ui.monoEncComboBox->setCurrentIndex(encodingToIndex(IT_MONO, settings.monoEnc));
@@ -723,6 +913,10 @@ void RqtImagePublisher::pluginSettingsToUi()
   ui.scaleWidthCheckBox->setChecked(settings.scaleWidth);
   ui.widthSpinBox->setValue(settings.width);
   ui.scaleHeightCheckBox->setChecked(settings.scaleHeight);
+  ui.scaleDepthCheckBox->setChecked(settings.scaleDepth);
+  ui.dynamicRangeCheckbox->setChecked(settings.dynamicDepthRange);
+  ui.minRangeSpinBox->setValue(settings.depthMinRange);
+  ui.maxRangeSpinBox->setValue(settings.depthMaxRange);
   ui.heightSpinBox->setValue(settings.height);
   ui.keepRatioCheckBox->setChecked(settings.keepRatio);
 }
@@ -731,7 +925,9 @@ void RqtImagePublisher::uiToPluginSettings()
 {
   settings.imageTopic = ui.imageTopicTextEdit->text();
   settings.frameId = ui.frameIdTextEdit->text();
-  settings.imageType = ui.typeComboBox->currentIndex();
+  settings.generateCameraInfo = ui.cameraInfoCheckBox->isChecked();
+  settings.cameraInfoTopic = ui.cameraInfoTopicLineEdit->text();
+  settings.imageType = (ImageType)ui.typeComboBox->currentIndex();
   settings.colorEnc = indexToEncoding(IT_COLOR, ui.colorEncComboBox->currentIndex());
   settings.colorAlphaEnc = indexToEncoding(IT_COLOR_ALPHA, ui.colorAlphaEncComboBox->currentIndex());
   settings.monoEnc = indexToEncoding(IT_MONO, ui.monoEncComboBox->currentIndex());
@@ -747,6 +943,10 @@ void RqtImagePublisher::uiToPluginSettings()
   settings.scaleWidth = ui.scaleWidthCheckBox->isChecked();
   settings.width = ui.widthSpinBox->value();
   settings.scaleHeight = ui.scaleHeightCheckBox->isChecked();
+  settings.scaleDepth = ui.scaleDepthCheckBox->isChecked();
+  settings.dynamicDepthRange = ui.dynamicRangeCheckbox->isChecked();
+  settings.depthMinRange = ui.minRangeSpinBox->value();
+  settings.depthMaxRange = ui.maxRangeSpinBox->value();
   settings.height = ui.heightSpinBox->value();
   settings.keepRatio = ui.keepRatioCheckBox->isChecked();
 }
@@ -765,8 +965,14 @@ void RqtImagePublisher::applySettings()
 {
   publishingTimer.stop();
   image_pub.shutdown();
+  camera_info_pub.shutdown();
   bool latched = settings.publishLatched && !settings.publishContinuously && !settings.rotateImages;
   image_pub = imt->advertise(settings.imageTopic.toStdString(), 1, latched);
+
+  if (settings.generateCameraInfo)
+  {
+    camera_info_pub = getNodeHandle().advertise<sensor_msgs::CameraInfo>(settings.cameraInfoTopic.toStdString(), 1, latched);
+  }
 
   if (image_loaded)
   {

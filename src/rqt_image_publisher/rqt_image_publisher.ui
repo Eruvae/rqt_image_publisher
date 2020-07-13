@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>637</width>
-    <height>487</height>
+    <width>705</width>
+    <height>509</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -30,7 +30,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>200</width>
+       <width>400</width>
        <height>16777215</height>
       </size>
      </property>
@@ -249,49 +249,7 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="imageTopicTextEdit"/>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label">
-        <property name="text">
-         <string>Resize</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="imageTopicLabel">
-        <property name="text">
-         <string>Image topic</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="slideshowLabel">
-        <property name="text">
-         <string>Slideshow</string>
-        </property>
-       </widget>
-      </item>
       <item row="6" column="2">
-       <layout class="QHBoxLayout" name="applyButtonsLayout">
-        <item>
-         <widget class="QPushButton" name="settingsCancelButton">
-          <property name="text">
-           <string>Cancel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="settingsApplyButton">
-          <property name="text">
-           <string>Apply</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="2">
        <layout class="QHBoxLayout" name="settingsPublishingLayout">
         <item>
          <widget class="QCheckBox" name="publishOnLoadCheckBox">
@@ -338,7 +296,17 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="2">
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="frameIdTextEdit"/>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="depthLabel">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="2">
        <layout class="QHBoxLayout" name="settingsResizeLayout">
         <item>
          <widget class="QCheckBox" name="scaleWidthCheckBox">
@@ -404,84 +372,14 @@
         </item>
        </layout>
       </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="frameIdLabel">
+      <item row="0" column="1">
+       <widget class="QLabel" name="imageTopicLabel">
         <property name="text">
-         <string>Frame ID</string>
+         <string>Image topic</string>
         </property>
        </widget>
       </item>
-      <item row="5" column="2">
-       <layout class="QHBoxLayout" name="settingsSlideshowLayout">
-        <item>
-         <widget class="QCheckBox" name="rotateImagesCheckBox">
-          <property name="text">
-           <string>Rotate images</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="rotateBackwardsCheckBox">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Backwards</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="startSlideshowOnLoadCheckBox">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="text">
-           <string>Start on load</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="rotationFrequencySpinBox">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="prefix">
-           <string>Frequency: </string>
-          </property>
-          <property name="suffix">
-           <string> Hz</string>
-          </property>
-          <property name="decimals">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="label_2">
-        <property name="text">
-         <string>Encoding</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="frameIdTextEdit"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="publishingLabel">
-        <property name="text">
-         <string>Publishing</string>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
+      <item row="3" column="2">
        <layout class="QHBoxLayout" name="encodingLayout">
         <item>
          <widget class="QLabel" name="typeLabel">
@@ -687,6 +585,192 @@
            </property>
           </item>
          </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLabel" name="publishingLabel">
+        <property name="text">
+         <string>Publishing</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="imageTopicTextEdit"/>
+      </item>
+      <item row="4" column="1">
+       <widget class="QLabel" name="resizeLabel">
+        <property name="text">
+         <string>Resize</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLabel" name="frameIdLabel">
+        <property name="text">
+         <string>Frame ID</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="2">
+       <layout class="QHBoxLayout" name="depthSettingsLayout">
+        <item>
+         <widget class="QCheckBox" name="scaleDepthCheckBox">
+          <property name="text">
+           <string>Scale depth</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="dynamicRangeCheckbox">
+          <property name="text">
+           <string>Dynamic range</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="minRangeSpinBox">
+          <property name="prefix">
+           <string>Min range: </string>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="maximum">
+           <double>99.900000000000006</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="maxRangeSpinBox">
+          <property name="prefix">
+           <string>Max range: </string>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="minimum">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>10.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="2">
+       <layout class="QHBoxLayout" name="settingsSlideshowLayout">
+        <item>
+         <widget class="QCheckBox" name="rotateImagesCheckBox">
+          <property name="text">
+           <string>Rotate images</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="rotateBackwardsCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Backwards</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="startSlideshowOnLoadCheckBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="text">
+           <string>Start on load</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="rotationFrequencySpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="prefix">
+           <string>Frequency: </string>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="encodingLabel">
+        <property name="text">
+         <string>Encoding</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2">
+       <layout class="QHBoxLayout" name="applyButtonsLayout">
+        <item>
+         <widget class="QPushButton" name="settingsCancelButton">
+          <property name="text">
+           <string>Cancel</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="settingsApplyButton">
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLabel" name="slideshowLabel">
+        <property name="text">
+         <string>Slideshow</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="cameraInfoLabel">
+        <property name="text">
+         <string>CameraInfo</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="2">
+       <layout class="QHBoxLayout" name="cameraInfoLayout">
+        <item>
+         <widget class="QCheckBox" name="cameraInfoCheckBox">
+          <property name="text">
+           <string>Topic</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLineEdit" name="cameraInfoTopicLineEdit"/>
         </item>
        </layout>
       </item>

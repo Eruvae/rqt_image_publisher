@@ -14,6 +14,7 @@
 #include <rqt_gui_cpp/plugin.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/Image.h>
+#include <sensor_msgs/CameraInfo.h>
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 
@@ -89,7 +90,7 @@ static inline Encoding stringToEncoding(const std::string &enc)
   else return ENC_INVALID;
 }
 
-static inline int indexToEncoding(ImageType type, int index)
+static inline Encoding indexToEncoding(ImageType type, int index)
 {
   int offset = 0;
   if (index > 0)
@@ -102,10 +103,10 @@ static inline int indexToEncoding(ImageType type, int index)
     case IT_DEPTH: offset = 10; break;
     }
   }
-  return index + offset;
+  return (Encoding)(index + offset);
 }
 
-static inline int encodingToIndex(ImageType type, int enc)
+static inline int encodingToIndex(ImageType type, Encoding enc)
 {
   int offset = 0;
   if (enc > 0)
@@ -118,18 +119,20 @@ static inline int encodingToIndex(ImageType type, int enc)
     case IT_DEPTH: offset = 10; break;
     }
   }
-  return enc - offset;
+  return (int)enc - offset;
 }
 
 struct PluginSettings
 {
   QString imageTopic;
   QString frameId;
-  int imageType;
-  int colorEnc;
-  int colorAlphaEnc;
-  int monoEnc;
-  int depthEnc;
+  bool generateCameraInfo;
+  QString cameraInfoTopic;
+  ImageType imageType;
+  Encoding colorEnc;
+  Encoding colorAlphaEnc;
+  Encoding monoEnc;
+  Encoding depthEnc;
   bool publishOnLoad;
   bool publishLatched;
   bool publishContinuously;
@@ -143,6 +146,10 @@ struct PluginSettings
   bool scaleHeight;
   int height;
   bool keepRatio;
+  bool scaleDepth;
+  bool dynamicDepthRange;
+  double depthMinRange;
+  double depthMaxRange;
   QStringList filters;
   QString lastFolder;
 };
@@ -188,20 +195,30 @@ private slots:
   void on_settingsApplyButton_clicked();
   void on_filterListCancelButton_clicked();
   void on_filterListApplyButton_clicked();
+  void on_cameraInfoCheckBox_toggled(bool checked);
+  void on_scaleWidthCheckBox_toggled(bool checked);
+  void on_scaleHeightCheckBox_toggled(bool checked);
+  void on_scaleDepthCheckBox_toggled(bool checked);
+  void on_dynamicRangeCheckbox_toggled(bool checked);
   void on_publishContinuouslyCheckBox_toggled(bool checked);
   void on_rotateImagesCheckBox_toggled(bool checked);
+  void on_minRangeSpinBox_valueChanged(double value);
+  void on_maxRangeSpinBox_valueChanged(double value);
   void on_publishingTimer_timeout();
-
 
 private:
   bool loadImage(const QModelIndex &index);
   cv::Mat convertToDepth(const cv::Mat &mat, int depth);
+  cv::Mat convertDepthForDisplay(const cv::Mat &mat);
+  void removeDepthOutliers(cv::Mat &mat);
   cv::Mat convertToEncoding(const cv::Mat &mat, Encoding enc, Encoding sourceEnc = ENC_AUTO);
   void resizeCvBridgeImage();
   ImageType detectType(const cv::Mat &mat);
   Encoding detectEncoding(const cv::Mat &mat, ImageType type);
   bool generateCvBridgeImage();
+  void generateCameraInfo();
   void generatePixmap();
+  void publishImage();
   //bool generateRosImage();
   void setSelectedImage(QModelIndex index);
   void clearSelectedImage();
@@ -218,6 +235,7 @@ private:
   RqtImagePublisherWidget* widget;
   image_transport::ImageTransport *imt;
   image_transport::Publisher image_pub;
+  ros::Publisher camera_info_pub;
   QTimer publishingTimer;
 
   QFileSystemModel *folder_model;
@@ -225,10 +243,12 @@ private:
   bool image_loaded;
   QModelIndex selected_image;
   cv::Mat image_cv;
+  Encoding image_encoding;
   cv_bridge::CvImage image_cvb;
   QImage image_qimg;
   QPixmap image_qpix;
   sensor_msgs::Image image_ros;
+  sensor_msgs::CameraInfo camera_info;
   PluginSettings settings;
 };
 
