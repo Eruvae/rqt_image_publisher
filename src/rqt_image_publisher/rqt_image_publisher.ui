@@ -249,128 +249,71 @@
       <property name="bottomMargin">
        <number>0</number>
       </property>
-      <item row="6" column="2">
-       <layout class="QHBoxLayout" name="settingsPublishingLayout">
-        <item>
-         <widget class="QCheckBox" name="publishOnLoadCheckBox">
-          <property name="text">
-           <string>Publish on load</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="publishLatchedCheckBox">
-          <property name="text">
-           <string>Latched</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="publishContinuouslyCheckBox">
-          <property name="text">
-           <string>Continuously</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="publishingFrequencySpinBox">
-          <property name="enabled">
-           <bool>false</bool>
-          </property>
-          <property name="prefix">
-           <string>Frequency: </string>
-          </property>
-          <property name="suffix">
-           <string> Hz</string>
-          </property>
-          <property name="decimals">
-           <number>1</number>
-          </property>
-          <property name="maximum">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="value">
-           <double>1.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
+      <item row="0" column="2">
+       <widget class="QLineEdit" name="imageTopicTextEdit"/>
       </item>
-      <item row="1" column="2">
-       <widget class="QLineEdit" name="frameIdTextEdit"/>
-      </item>
-      <item row="5" column="1">
-       <widget class="QLabel" name="depthLabel">
-        <property name="text">
-         <string>Depth</string>
-        </property>
-       </widget>
-      </item>
-      <item row="4" column="2">
-       <layout class="QHBoxLayout" name="settingsResizeLayout">
+      <item row="5" column="2">
+       <layout class="QHBoxLayout" name="depthSettingsLayout">
         <item>
-         <widget class="QCheckBox" name="scaleWidthCheckBox">
+         <widget class="QCheckBox" name="scaleDepthCheckBox">
           <property name="text">
-           <string>Width</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="widthSpinBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximum">
-           <number>10000</number>
-          </property>
-          <property name="singleStep">
-           <number>10</number>
-          </property>
-          <property name="value">
-           <number>640</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="scaleHeightCheckBox">
-          <property name="text">
-           <string>Height</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QSpinBox" name="heightSpinBox">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximum">
-           <number>10000</number>
-          </property>
-          <property name="singleStep">
-           <number>10</number>
-          </property>
-          <property name="value">
-           <number>480</number>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="keepRatioCheckBox">
-          <property name="text">
-           <string>Keep ratio</string>
+           <string>Scale depth</string>
           </property>
           <property name="checked">
            <bool>true</bool>
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QCheckBox" name="dynamicRangeCheckbox">
+          <property name="text">
+           <string>Dynamic range</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="minRangeSpinBox">
+          <property name="prefix">
+           <string>Min range: </string>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="maximum">
+           <double>99.900000000000006</double>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="maxRangeSpinBox">
+          <property name="prefix">
+           <string>Max range: </string>
+          </property>
+          <property name="suffix">
+           <string> m</string>
+          </property>
+          <property name="minimum">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="singleStep">
+           <double>0.100000000000000</double>
+          </property>
+          <property name="value">
+           <double>10.000000000000000</double>
+          </property>
+         </widget>
+        </item>
        </layout>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLabel" name="cameraInfoLabel">
+        <property name="text">
+         <string>CameraInfo</string>
+        </property>
+       </widget>
       </item>
       <item row="0" column="1">
        <widget class="QLabel" name="imageTopicLabel">
@@ -588,86 +531,6 @@
         </item>
        </layout>
       </item>
-      <item row="6" column="1">
-       <widget class="QLabel" name="publishingLabel">
-        <property name="text">
-         <string>Publishing</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="2">
-       <widget class="QLineEdit" name="imageTopicTextEdit"/>
-      </item>
-      <item row="4" column="1">
-       <widget class="QLabel" name="resizeLabel">
-        <property name="text">
-         <string>Resize</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="frameIdLabel">
-        <property name="text">
-         <string>Frame ID</string>
-        </property>
-       </widget>
-      </item>
-      <item row="5" column="2">
-       <layout class="QHBoxLayout" name="depthSettingsLayout">
-        <item>
-         <widget class="QCheckBox" name="scaleDepthCheckBox">
-          <property name="text">
-           <string>Scale depth</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="dynamicRangeCheckbox">
-          <property name="text">
-           <string>Dynamic range</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="minRangeSpinBox">
-          <property name="prefix">
-           <string>Min range: </string>
-          </property>
-          <property name="suffix">
-           <string> m</string>
-          </property>
-          <property name="maximum">
-           <double>99.900000000000006</double>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QDoubleSpinBox" name="maxRangeSpinBox">
-          <property name="prefix">
-           <string>Max range: </string>
-          </property>
-          <property name="suffix">
-           <string> m</string>
-          </property>
-          <property name="minimum">
-           <double>0.100000000000000</double>
-          </property>
-          <property name="maximum">
-           <double>100.000000000000000</double>
-          </property>
-          <property name="singleStep">
-           <double>0.100000000000000</double>
-          </property>
-          <property name="value">
-           <double>10.000000000000000</double>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
       <item row="7" column="2">
        <layout class="QHBoxLayout" name="settingsSlideshowLayout">
         <item>
@@ -721,14 +584,21 @@
         </item>
        </layout>
       </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="encodingLabel">
+      <item row="1" column="1">
+       <widget class="QLabel" name="frameIdLabel">
         <property name="text">
-         <string>Encoding</string>
+         <string>Frame ID</string>
         </property>
        </widget>
       </item>
-      <item row="8" column="2">
+      <item row="4" column="1">
+       <widget class="QLabel" name="resizeLabel">
+        <property name="text">
+         <string>Resize</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="2">
        <layout class="QHBoxLayout" name="applyButtonsLayout">
         <item>
          <widget class="QPushButton" name="settingsCancelButton">
@@ -744,6 +614,13 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="settingsOkButton">
+          <property name="text">
+           <string>OK</string>
+          </property>
+         </widget>
+        </item>
        </layout>
       </item>
       <item row="7" column="1">
@@ -753,10 +630,76 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QLabel" name="cameraInfoLabel">
+      <item row="4" column="2">
+       <layout class="QHBoxLayout" name="settingsResizeLayout">
+        <item>
+         <widget class="QCheckBox" name="scaleWidthCheckBox">
+          <property name="text">
+           <string>Width</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="widthSpinBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="singleStep">
+           <number>10</number>
+          </property>
+          <property name="value">
+           <number>640</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="scaleHeightCheckBox">
+          <property name="text">
+           <string>Height</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QSpinBox" name="heightSpinBox">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="maximum">
+           <number>10000</number>
+          </property>
+          <property name="singleStep">
+           <number>10</number>
+          </property>
+          <property name="value">
+           <number>480</number>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="keepRatioCheckBox">
+          <property name="text">
+           <string>Keep ratio</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLabel" name="publishingLabel">
         <property name="text">
-         <string>CameraInfo</string>
+         <string>Publishing</string>
         </property>
        </widget>
       </item>
@@ -771,6 +714,88 @@
         </item>
         <item>
          <widget class="QLineEdit" name="cameraInfoTopicLineEdit"/>
+        </item>
+       </layout>
+      </item>
+      <item row="6" column="2">
+       <layout class="QHBoxLayout" name="settingsPublishingLayout">
+        <item>
+         <widget class="QCheckBox" name="publishOnLoadCheckBox">
+          <property name="text">
+           <string>Publish on load</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="publishLatchedCheckBox">
+          <property name="text">
+           <string>Latched</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QCheckBox" name="publishContinuouslyCheckBox">
+          <property name="text">
+           <string>Continuously</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="publishingFrequencySpinBox">
+          <property name="enabled">
+           <bool>false</bool>
+          </property>
+          <property name="prefix">
+           <string>Frequency: </string>
+          </property>
+          <property name="suffix">
+           <string> Hz</string>
+          </property>
+          <property name="decimals">
+           <number>1</number>
+          </property>
+          <property name="maximum">
+           <double>100.000000000000000</double>
+          </property>
+          <property name="value">
+           <double>1.000000000000000</double>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLabel" name="depthLabel">
+        <property name="text">
+         <string>Depth</string>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="2">
+       <widget class="QLineEdit" name="frameIdTextEdit"/>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="encodingLabel">
+        <property name="text">
+         <string>Encoding</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLabel" name="syncLabel">
+        <property name="text">
+         <string>Sync</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="2">
+       <layout class="QHBoxLayout" name="syncSettingsLayout">
+        <item>
+         <widget class="QCheckBox" name="syncPublishingCheckBox">
+          <property name="text">
+           <string>Sync publishing/slideshow</string>
+          </property>
+         </widget>
         </item>
        </layout>
       </item>

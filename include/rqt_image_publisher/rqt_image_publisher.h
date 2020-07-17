@@ -18,6 +18,8 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 
+#include <unordered_set>
+
 #include "ui_rqt_image_publisher.h"
 
 namespace rqt_image_publisher
@@ -152,6 +154,8 @@ struct PluginSettings
   double depthMaxRange;
   QStringList filters;
   QString lastFolder;
+
+  bool synchronizePublishing;
 };
 
 class RqtImagePublisher;
@@ -193,6 +197,7 @@ private slots:
   void on_filterListButton_clicked();
   void on_settingsCancelButton_clicked();
   void on_settingsApplyButton_clicked();
+  void on_settingsOkButton_clicked();
   void on_filterListCancelButton_clicked();
   void on_filterListApplyButton_clicked();
   void on_cameraInfoCheckBox_toggled(bool checked);
@@ -205,8 +210,21 @@ private slots:
   void on_minRangeSpinBox_valueChanged(double value);
   void on_maxRangeSpinBox_valueChanged(double value);
   void on_publishingTimer_timeout();
+  void on_synchronizedTimeoutSignal_received(const ros::Time &time);
+  void on_synchronizedSettings_changed(const PluginSettings &shared_settings);
+
+signals:
+  void synchronizedTimeoutSignal(const ros::Time &time);
+  void synchronizedSettingsChanged(const PluginSettings &shared_settings);
 
 private:
+  // Button text constants
+  static const QString PUBLISH;
+  static const QString START_PUBLISHING;
+  static const QString STOP_PUBLISHING;
+  static const QString START_SLIDESHOW;
+  static const QString STOP_SLIDESHOW;
+
   bool loadImage(const QModelIndex &index);
   cv::Mat convertToDepth(const cv::Mat &mat, int depth);
   cv::Mat convertDepthForDisplay(const cv::Mat &mat);
@@ -218,7 +236,8 @@ private:
   bool generateCvBridgeImage();
   void generateCameraInfo();
   void generatePixmap();
-  void publishImage();
+  void publishImage(const ros::Time &time = ros::Time::now());
+  static void synchronizedPublishImage();
   //bool generateRosImage();
   void setSelectedImage(QModelIndex index);
   void clearSelectedImage();
@@ -226,10 +245,15 @@ private:
   void stopSlideshow();
   void startPublishing();
   void stopPublishing();
+  static void synchronizedStartSlideshow();
+  static void synchronizedStopSlideshow();
+  static void synchronizedStartPublishing();
+  static void synchronizedStopPublishing();
   void pluginSettingsToUi();
   void uiToPluginSettings();
   void rescaleImageLabel();
   void applySettings();
+  void applySyncedSettings();
 
   Ui::RqtImagePublisher ui;
   RqtImagePublisherWidget* widget;
@@ -250,6 +274,13 @@ private:
   sensor_msgs::Image image_ros;
   sensor_msgs::CameraInfo camera_info;
   PluginSettings settings;
+
+  static bool synchronizeSettings;
+  static std::unordered_set<RqtImagePublisher*> plugin_instances;
+  static QTimer synchronizedTimer;
+  static void notifyInstances();
+  void notifyChangedSettings();
+  void notifyPublishButtonClicked();
 };
 
 }

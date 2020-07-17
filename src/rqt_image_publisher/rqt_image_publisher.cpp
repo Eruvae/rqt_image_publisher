@@ -9,6 +9,8 @@
 namespace rqt_image_publisher
 {
 
+// Widget class for resize event
+
 RqtImagePublisherWidget::RqtImagePublisherWidget(RqtImagePublisher* plugin, QWidget* parent, Qt::WindowFlags f)
   : QWidget(parent, f), plugin(plugin)
 {
@@ -18,6 +20,74 @@ void RqtImagePublisherWidget::resizeEvent(QResizeEvent *event)
 {
   plugin->rescaleImageLabel();
 }
+
+// Static stuff
+
+const QString RqtImagePublisher::PUBLISH = "Publish";
+const QString RqtImagePublisher::START_PUBLISHING = "Start publishing";
+const QString RqtImagePublisher::STOP_PUBLISHING = "Stop publishing";
+const QString RqtImagePublisher::START_SLIDESHOW = "Start slideshow";
+const QString RqtImagePublisher::STOP_SLIDESHOW = "Stop slideshow";
+
+bool RqtImagePublisher::synchronizeSettings(false);
+
+std::unordered_set<RqtImagePublisher*> RqtImagePublisher::plugin_instances;
+
+QTimer RqtImagePublisher::synchronizedTimer;
+
+void RqtImagePublisher::notifyInstances()
+{
+  ros::Time time = ros::Time::now();
+  for (RqtImagePublisher *instance : plugin_instances)
+  {
+    emit instance->synchronizedTimeoutSignal(time);
+  }
+
+}
+
+void RqtImagePublisher::notifyChangedSettings()
+{
+  for (RqtImagePublisher *instance : plugin_instances)
+  {
+    if (instance == this)
+      continue;
+
+    emit instance->synchronizedSettingsChanged(settings);
+  }
+  synchronizeSettings = settings.synchronizePublishing;
+}
+
+void RqtImagePublisher::notifyPublishButtonClicked()
+{
+  if (settings.rotateImages) // this is start / stop slideshow
+  {
+    if (publishingTimer.isActive()) // stop slideshow
+    {
+      synchronizedStopSlideshow();
+    }
+    else // start slideshow
+    {
+      synchronizedStartSlideshow();
+    }
+  }
+  else if (settings.publishContinuously)
+  {
+    if (publishingTimer.isActive()) // stop publishing
+    {
+      synchronizedStopPublishing();
+    }
+    else // start publishing
+    {
+      synchronizedStopPublishing();
+    }
+  }
+  else
+  {
+    synchronizedPublishImage();
+  }
+}
+
+// Main class
 
 RqtImagePublisher::RqtImagePublisher() :
   rqt_gui_cpp::Plugin(),
@@ -51,8 +121,9 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.publishButton, SIGNAL(clicked()), this, SLOT(on_publishButton_clicked()));
   connect(ui.openSettingsButton, SIGNAL(clicked()), this, SLOT(on_openSettingsButton_clicked()));
   connect(ui.filterListButton, SIGNAL(clicked()), this, SLOT(on_filterListButton_clicked()));
-  connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
   connect(ui.settingsCancelButton, SIGNAL(clicked()), this, SLOT(on_settingsCancelButton_clicked()));
+  connect(ui.settingsApplyButton, SIGNAL(clicked()), this, SLOT(on_settingsApplyButton_clicked()));
+  connect(ui.settingsOkButton, SIGNAL(clicked()), this, SLOT(on_settingsOkButton_clicked()));
   connect(ui.filterListApplyButton, SIGNAL(clicked()), this, SLOT(on_filterListApplyButton_clicked()));
   connect(ui.filterListCancelButton, SIGNAL(clicked()), this, SLOT(on_filterListCancelButton_clicked()));
   connect(ui.cameraInfoCheckBox, SIGNAL(toggled(bool)), this, SLOT(on_cameraInfoCheckBox_toggled(bool)));
@@ -65,10 +136,19 @@ void RqtImagePublisher::initPlugin(qt_gui_cpp::PluginContext& context)
   connect(ui.minRangeSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_minRangeSpinBox_valueChanged(double)));
   connect(ui.maxRangeSpinBox, SIGNAL(valueChanged(double)), this, SLOT(on_maxRangeSpinBox_valueChanged(double)));
   connect(&publishingTimer, SIGNAL(timeout()), this, SLOT(on_publishingTimer_timeout()));
+  connect(&synchronizedTimer, &QTimer::timeout, &RqtImagePublisher::notifyInstances);
+  connect(this, SIGNAL(synchronizedTimeoutSignal(const ros::Time&)), this, SLOT(on_synchronizedTimeoutSignal_received(const ros::Time&)));
+  connect(this, SIGNAL(synchronizedSettingsChanged(const PluginSettings&)), this, SLOT(on_synchronizedSettings_changed(const PluginSettings&)));
+
+  plugin_instances.insert(this);
+  ROS_INFO_STREAM("Number of instances: " << plugin_instances.size());
 }
 
 void RqtImagePublisher::shutdownPlugin()
 {
+  plugin_instances.erase(this);
+  ROS_INFO_STREAM("Number of instances: " << plugin_instances.size());
+
   // unregister all publishers here
   image_pub.shutdown();
   camera_info_pub.shutdown();
@@ -107,6 +187,8 @@ void RqtImagePublisher::saveSettings(qt_gui_cpp::Settings& plugin_settings, qt_g
   instance_settings.setValue("depthMaxRange", settings.depthMaxRange);
   instance_settings.setValue("filters", settings.filters);
   instance_settings.setValue("lastFolder", settings.lastFolder);
+
+  plugin_settings.setValue("synchronizePublishing", settings.synchronizePublishing);
 }
 
 void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_settings, const qt_gui_cpp::Settings& instance_settings)
@@ -139,6 +221,16 @@ void RqtImagePublisher::restoreSettings(const qt_gui_cpp::Settings& plugin_setti
   settings.depthMaxRange = instance_settings.value("depthMaxRange", 10.0).toDouble();
   settings.filters = instance_settings.value("filters", QStringList()).toStringList();
   settings.lastFolder = instance_settings.value("lastFolder", QString()).toString();
+
+  if (plugin_instances.size() == 1) // if this is the first loaded plugin, restore saved value
+  {
+    settings.synchronizePublishing = plugin_settings.value("synchronizePublishing", false).toBool();
+    synchronizeSettings = settings.synchronizePublishing;
+  }
+  else
+  {
+    settings.synchronizePublishing = synchronizeSettings;
+  }
 
   ui.filterListTextEdit->setPlainText(settings.filters.join('\n'));
   pluginSettingsToUi();
@@ -224,6 +316,12 @@ void RqtImagePublisher::on_nextImageButton_clicked()
 
 void RqtImagePublisher::on_publishButton_clicked()
 {
+  if (settings.synchronizePublishing)
+  {
+    notifyPublishButtonClicked();
+    return;
+  }
+
   if (settings.rotateImages) // this is start / stop slideshow
   {
     if (publishingTimer.isActive()) // stop slideshow
@@ -274,9 +372,16 @@ void RqtImagePublisher::on_settingsCancelButton_clicked()
 void RqtImagePublisher::on_settingsApplyButton_clicked()
 {
   uiToPluginSettings();
+  applySettings();
+}
+
+void RqtImagePublisher::on_settingsOkButton_clicked()
+{
+  uiToPluginSettings();
   ui.settingsWidget->hide();
   applySettings();
 }
+
 
 void RqtImagePublisher::on_filterListCancelButton_clicked()
 {
@@ -376,6 +481,35 @@ void RqtImagePublisher::on_publishingTimer_timeout()
   else if (settings.publishContinuously)
   {
     publishImage();
+  }
+}
+
+void RqtImagePublisher::on_synchronizedTimeoutSignal_received(const ros::Time &time)
+{
+  ROS_INFO_STREAM("Thread: " << this << ", Signal received for time: " << time);
+}
+
+void RqtImagePublisher::on_synchronizedSettings_changed(const PluginSettings &shared_settings)
+{
+  bool was_synced = settings.synchronizePublishing;
+  settings.synchronizePublishing = shared_settings.synchronizePublishing;
+  if (settings.synchronizePublishing)
+  {
+    settings.publishOnLoad = shared_settings.publishOnLoad;
+    settings.publishLatched = shared_settings.publishLatched;
+    settings.publishContinuously = shared_settings.publishContinuously;
+    settings.rotateImages = shared_settings.rotateImages;
+    settings.rotateBackwards = shared_settings.rotateBackwards;
+    settings.startSlideshowOnLoad = shared_settings.startSlideshowOnLoad;
+    settings.publishingFrequency = shared_settings.publishingFrequency;
+    settings.rotationFrequency = shared_settings.rotationFrequency;
+
+    pluginSettingsToUi();
+    applySyncedSettings();
+  }
+  else if (was_synced)
+  {
+    pluginSettingsToUi(); // make sure sync settings are synchronized in UI
   }
 }
 
@@ -799,14 +933,23 @@ void RqtImagePublisher::generatePixmap()
   rescaleImageLabel();
 }
 
-void RqtImagePublisher::publishImage()
+void RqtImagePublisher::publishImage(const ros::Time &time)
 {
-  image_ros.header.stamp = ros::Time::now();
+  image_ros.header.stamp = time;
   image_pub.publish(image_ros);
   if (settings.generateCameraInfo)
   {
-    camera_info.header.stamp = ros::Time::now();
+    camera_info.header.stamp = time;
     camera_info_pub.publish(camera_info);
+  }
+}
+
+void RqtImagePublisher::synchronizedPublishImage()
+{
+  ros::Time time = ros::Time::now();
+  for (RqtImagePublisher *instance : plugin_instances)
+  {
+    instance->publishImage(time);
   }
 }
 
@@ -869,26 +1012,56 @@ void RqtImagePublisher::startSlideshow()
 {
   publishImage();
   publishingTimer.start();
-  ui.publishButton->setText("Stop slideshow");
+  ui.publishButton->setText(STOP_SLIDESHOW);
 }
 
 void RqtImagePublisher::stopSlideshow()
 {
   publishingTimer.stop();
-  ui.publishButton->setText("Start slideshow");
+  ui.publishButton->setText(START_SLIDESHOW);
 }
 
 void RqtImagePublisher::startPublishing()
 {
   publishImage();
   publishingTimer.start();
-  ui.publishButton->setText("Stop publishing");
+  ui.publishButton->setText(STOP_PUBLISHING);
 }
 
 void RqtImagePublisher::stopPublishing()
 {
   publishingTimer.stop();
-  ui.publishButton->setText("Start publishing");
+  ui.publishButton->setText(START_PUBLISHING);
+}
+
+void RqtImagePublisher::synchronizedStartSlideshow()
+{
+  synchronizedPublishImage();;
+  synchronizedTimer.start();
+  for (RqtImagePublisher *instance : plugin_instances)
+    instance->ui.publishButton->setText(STOP_SLIDESHOW);
+}
+
+void RqtImagePublisher::synchronizedStopSlideshow()
+{
+  synchronizedTimer.stop();
+  for (RqtImagePublisher *instance : plugin_instances)
+    instance->ui.publishButton->setText(START_SLIDESHOW);
+}
+
+void RqtImagePublisher::synchronizedStartPublishing()
+{
+  synchronizedPublishImage();
+  synchronizedTimer.start();
+  for (RqtImagePublisher *instance : plugin_instances)
+    instance->ui.publishButton->setText(STOP_PUBLISHING);
+}
+
+void RqtImagePublisher::synchronizedStopPublishing()
+{
+  synchronizedTimer.stop();
+  for (RqtImagePublisher *instance : plugin_instances)
+    instance->ui.publishButton->setText(START_PUBLISHING);
 }
 
 void RqtImagePublisher::pluginSettingsToUi()
@@ -919,6 +1092,8 @@ void RqtImagePublisher::pluginSettingsToUi()
   ui.maxRangeSpinBox->setValue(settings.depthMaxRange);
   ui.heightSpinBox->setValue(settings.height);
   ui.keepRatioCheckBox->setChecked(settings.keepRatio);
+
+  ui.syncPublishingCheckBox->setChecked(settings.synchronizePublishing);
 }
 
 void RqtImagePublisher::uiToPluginSettings()
@@ -949,6 +1124,8 @@ void RqtImagePublisher::uiToPluginSettings()
   settings.depthMaxRange = ui.maxRangeSpinBox->value();
   settings.height = ui.heightSpinBox->value();
   settings.keepRatio = ui.keepRatioCheckBox->isChecked();
+
+  settings.synchronizePublishing = ui.syncPublishingCheckBox->isChecked();
 }
 
 void RqtImagePublisher::rescaleImageLabel()
@@ -964,6 +1141,7 @@ void RqtImagePublisher::rescaleImageLabel()
 void RqtImagePublisher::applySettings()
 {
   publishingTimer.stop();
+  synchronizedTimer.stop();
   image_pub.shutdown();
   camera_info_pub.shutdown();
   bool latched = settings.publishLatched && !settings.publishContinuously && !settings.rotateImages;
@@ -982,17 +1160,61 @@ void RqtImagePublisher::applySettings()
 
   if (settings.rotateImages)
   {
-    ui.publishButton->setText("Start slideshow");
+    ui.publishButton->setText(START_SLIDESHOW);
     publishingTimer.setInterval((int)(1000.0 / settings.rotationFrequency));
+    if (settings.synchronizePublishing)
+      synchronizedTimer.setInterval((int)(1000.0 / settings.rotationFrequency));
   }
   else if (settings.publishContinuously)
   {
-    ui.publishButton->setText("Start publishing");
+    ui.publishButton->setText(START_PUBLISHING);
     publishingTimer.setInterval((int)(1000.0 / settings.publishingFrequency));
+    if (settings.synchronizePublishing)
+      synchronizedTimer.setInterval((int)(1000.0 / settings.publishingFrequency));
   }
   else
   {
-    ui.publishButton->setText("Publish");
+    ui.publishButton->setText(PUBLISH);
+  }
+
+  if (settings.synchronizePublishing || synchronizeSettings)
+  {
+    notifyChangedSettings();
+  }
+
+}
+
+void RqtImagePublisher::applySyncedSettings()
+{
+  publishingTimer.stop();
+  synchronizedTimer.stop();
+  image_pub.shutdown();
+  camera_info_pub.shutdown();
+  bool latched = settings.publishLatched && !settings.publishContinuously && !settings.rotateImages;
+  image_pub = imt->advertise(settings.imageTopic.toStdString(), 1, latched);
+
+  if (settings.generateCameraInfo)
+  {
+    camera_info_pub = getNodeHandle().advertise<sensor_msgs::CameraInfo>(settings.cameraInfoTopic.toStdString(), 1, latched);
+  }
+
+  if (image_loaded)
+  {
+    generateCvBridgeImage();
+    generatePixmap();
+  }
+
+  if (settings.rotateImages)
+  {
+    ui.publishButton->setText(START_SLIDESHOW);
+  }
+  else if (settings.publishContinuously)
+  {
+    ui.publishButton->setText(START_PUBLISHING);
+  }
+  else
+  {
+    ui.publishButton->setText(PUBLISH);
   }
 
 }
