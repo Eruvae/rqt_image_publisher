@@ -122,14 +122,17 @@ catkin_package(
 
 set (rqt_ip_SRCS
   src/rqt_image_publisher/rqt_image_publisher.cpp
+  src/rqt_image_publisher/camera_info_settings.cpp
 )
 
 set(rqt_ip_HDRS
   include/rqt_image_publisher/rqt_image_publisher.h
+  include/rqt_image_publisher/camera_info_settings.h
 )
 
 set(rqt_ip_UIS
   src/rqt_image_publisher/rqt_image_publisher.ui
+  src/rqt_image_publisher/camera_info_settings.ui
 )
 
 if("${qt_gui_cpp_USE_QT_MAJOR_VERSION} " STREQUAL "5 ")

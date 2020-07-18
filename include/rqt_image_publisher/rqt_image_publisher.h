@@ -18,8 +18,7 @@
 #include <sensor_msgs/image_encodings.h>
 #include <cv_bridge/cv_bridge.h>
 
-#include <unordered_set>
-
+#include "rqt_image_publisher/camera_info_settings.h"
 #include "ui_rqt_image_publisher.h"
 
 namespace rqt_image_publisher
@@ -124,12 +123,11 @@ static inline int encodingToIndex(ImageType type, Encoding enc)
   return (int)enc - offset;
 }
 
-struct PluginSettings
+struct InstanceSettings
 {
   QString imageTopic;
   QString frameId;
-  bool generateCameraInfo;
-  QString cameraInfoTopic;
+  bool simulateCamera;
   ImageType imageType;
   Encoding colorEnc;
   Encoding colorAlphaEnc;
@@ -154,8 +152,12 @@ struct PluginSettings
   double depthMaxRange;
   QStringList filters;
   QString lastFolder;
+};
 
+struct PluginSettings
+{
   bool synchronizePublishing;
+  QMap<QString, QVariant> camera_info_presets;
 };
 
 class RqtImagePublisher;
@@ -209,13 +211,9 @@ private slots:
   void on_rotateImagesCheckBox_toggled(bool checked);
   void on_minRangeSpinBox_valueChanged(double value);
   void on_maxRangeSpinBox_valueChanged(double value);
+  void on_cameraInfoSettingsButton_clicked();
   void on_publishingTimer_timeout();
-  void on_synchronizedTimeoutSignal_received(const ros::Time &time);
-  void on_synchronizedSettings_changed(const PluginSettings &shared_settings);
-
-signals:
-  void synchronizedTimeoutSignal(const ros::Time &time);
-  void synchronizedSettingsChanged(const PluginSettings &shared_settings);
+  static void on_synchronizedTimer_timeout();
 
 private:
   // Button text constants
@@ -253,17 +251,27 @@ private:
   void uiToPluginSettings();
   void rescaleImageLabel();
   void applySettings();
+  void changeSynchronizedSettings(const InstanceSettings &shared_settings);
   void applySyncedSettings();
+  void notifyChangedSettings();
+  void notifyPublishButtonClicked();
 
-  Ui::RqtImagePublisher ui;
+  // UI members
+  Ui::RqtImagePublisherWidgetUi ui;
   RqtImagePublisherWidget* widget;
+
+  // ROS communication
   image_transport::ImageTransport *imt;
   image_transport::Publisher image_pub;
-  ros::Publisher camera_info_pub;
+  image_transport::CameraPublisher camera_pub;
+
+  // Timers
   QTimer publishingTimer;
+  static QTimer synchronizedTimer;
 
   QFileSystemModel *folder_model;
 
+  // Currently loaded image
   bool image_loaded;
   QModelIndex selected_image;
   cv::Mat image_cv;
@@ -273,14 +281,13 @@ private:
   QPixmap image_qpix;
   sensor_msgs::Image image_ros;
   sensor_msgs::CameraInfo camera_info;
-  PluginSettings settings;
 
-  static bool synchronizeSettings;
-  static std::unordered_set<RqtImagePublisher*> plugin_instances;
-  static QTimer synchronizedTimer;
-  static void notifyInstances();
-  void notifyChangedSettings();
-  void notifyPublishButtonClicked();
+  // Settings
+  InstanceSettings settings;
+  static PluginSettings global_settings;
+  static QSet<RqtImagePublisher*> plugin_instances;
+
+  CameraInfoSettingsDialog *camInfoDiag;
 };
 
 }

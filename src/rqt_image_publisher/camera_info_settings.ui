@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>CameraInfoSettingsDialogUi</class>
+ <widget class="QDialog" name="CameraInfoSettingsDialogUi">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>741</width>
+    <height>336</height>
+   </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="2" column="1">
+    <layout class="QGridLayout" name="projectionMatrixLayout">
+     <item row="4" column="0">
+      <widget class="QDoubleSpinBox" name="P9">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="P10">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="P6">
+       <property name="toolTip">
+        <string>fy'</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QDoubleSpinBox" name="P1">
+       <property name="toolTip">
+        <string>fx'</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="P2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="maximum">
+        <double>99.989999999999995</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QDoubleSpinBox" name="P11">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QDoubleSpinBox" name="P3">
+       <property name="toolTip">
+        <string>cx'</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QDoubleSpinBox" name="P5">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QDoubleSpinBox" name="P7">
+       <property name="toolTip">
+        <string>cy'</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QDoubleSpinBox" name="P4">
+       <property name="toolTip">
+        <string>Tx</string>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="3">
+      <widget class="QDoubleSpinBox" name="P8">
+       <property name="toolTip">
+        <string>Ty</string>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="3">
+      <widget class="QDoubleSpinBox" name="P12">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="3">
+    <layout class="QHBoxLayout" name="binningLayout">
+     <item>
+      <widget class="QSpinBox" name="binning_x">
+       <property name="prefix">
+        <string>x: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QSpinBox" name="binning_y">
+       <property name="prefix">
+        <string>y: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLabel" name="intrinsicMatrixLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Intrinsic&lt;br/&gt;matrix (K)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="roiLabel">
+     <property name="text">
+      <string>ROI</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3">
+    <layout class="QGridLayout" name="intrinsicMatrixLayout">
+     <item row="4" column="0">
+      <widget class="QDoubleSpinBox" name="K7">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QDoubleSpinBox" name="K3">
+       <property name="toolTip">
+        <string>cx</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QDoubleSpinBox" name="K6">
+       <property name="toolTip">
+        <string>cy</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="K8">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QDoubleSpinBox" name="K1">
+       <property name="toolTip">
+        <string>fx</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="K2">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="0">
+      <widget class="QDoubleSpinBox" name="K4">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="K5">
+       <property name="toolTip">
+        <string>fy</string>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QDoubleSpinBox" name="K9">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="statusTip">
+        <string/>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="3">
+    <layout class="QGridLayout" name="rectificationMatrixLayout">
+     <item row="3" column="0">
+      <widget class="QDoubleSpinBox" name="R4">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="1">
+      <widget class="QDoubleSpinBox" name="R5">
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="1">
+      <widget class="QDoubleSpinBox" name="R8">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="4" column="2">
+      <widget class="QDoubleSpinBox" name="R9">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="3" column="2">
+      <widget class="QDoubleSpinBox" name="R6"/>
+     </item>
+     <item row="4" column="0">
+      <widget class="QDoubleSpinBox" name="R7">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QDoubleSpinBox" name="R1">
+       <property name="maximum">
+        <double>99.989999999999995</double>
+       </property>
+       <property name="value">
+        <double>1.000000000000000</double>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="R2">
+       <property name="enabled">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QDoubleSpinBox" name="R3"/>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="3">
+    <widget class="QComboBox" name="distortionModelComboBox">
+     <item>
+      <property name="text">
+       <string>plumb_bob</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>rational_polynomial</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="distortionParamsLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Distortion&lt;br/&gt;params (D)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <property name="wordWrap">
+      <bool>false</bool>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" rowspan="2">
+    <layout class="QGridLayout" name="roiLayout">
+     <item row="2" column="0" colspan="2">
+      <widget class="QCheckBox" name="roi_rectify">
+       <property name="text">
+        <string>Rectify</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QSpinBox" name="roi_x_offset">
+       <property name="prefix">
+        <string>x-off: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="roi_height">
+       <property name="prefix">
+        <string>height: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QSpinBox" name="roi_width">
+       <property name="prefix">
+        <string>width: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QSpinBox" name="roi_y_offset">
+       <property name="prefix">
+        <string>y-off: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="1">
+    <layout class="QHBoxLayout" name="presetLayout">
+     <item>
+      <widget class="QComboBox" name="presetComboBox"/>
+     </item>
+     <item>
+      <widget class="QPushButton" name="deletePresetButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">QPushButton{ background-color : rgb(100,0,0); }</string>
+       </property>
+       <property name="text">
+        <string>Delete</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="savePresetButton">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="text">
+        <string>Save</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="0" column="2">
+    <widget class="QLabel" name="distortionModelLabel">
+     <property name="text">
+      <string>Distortion Model</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="projectionMatrixLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Projection&lt;br/&gt;matrix (P)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="0">
+    <widget class="QLabel" name="presetLabel">
+     <property name="text">
+      <string>Preset</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="2">
+    <widget class="QLabel" name="binningLabel">
+     <property name="text">
+      <string>Binning</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1">
+    <layout class="QGridLayout" name="distortionMatrixLayout">
+     <item row="1" column="1">
+      <widget class="QDoubleSpinBox" name="D4">
+       <property name="prefix">
+        <string>t2: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QDoubleSpinBox" name="D2">
+       <property name="prefix">
+        <string>k2: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QDoubleSpinBox" name="D1">
+       <property name="prefix">
+        <string>k1: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QDoubleSpinBox" name="D3">
+       <property name="prefix">
+        <string>t1: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QDoubleSpinBox" name="D6">
+       <property name="prefix">
+        <string>k4: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="1">
+      <widget class="QDoubleSpinBox" name="D7">
+       <property name="prefix">
+        <string>k5: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="2">
+      <widget class="QDoubleSpinBox" name="D8">
+       <property name="prefix">
+        <string>k6: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QDoubleSpinBox" name="D5">
+       <property name="prefix">
+        <string>k3: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="2">
+    <widget class="QLabel" name="rectificationMatrixLabel">
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Rectification&lt;br/&gt;matrix (R)&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2">
+    <widget class="QCheckBox" name="enableAllCheckBox">
+     <property name="text">
+      <string>Enable all</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="3">
+    <widget class="QDialogButtonBox" name="confirmButtonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+     <property name="centerButtons">
+      <bool>true</bool>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
